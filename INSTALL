@@ -1,0 +1,5 @@
+Building EACoin
+
+See doc/build-*.md for instructions on building eacoind,
+the intended-for-services, no-graphical-interface, reference
+implementation of EACoin.
