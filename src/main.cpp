@@ -1628,16 +1628,20 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+    int halvings = (nHeight - 41099) / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 5 * COIN;
+    CAmount nSubsidy = 0.5 * COIN;
         
     if (nHeight  == 1) 
     {
         nSubsidy = 75000000 * COIN;
+    }
+    else if (nHeight > 1 && nHeight < 41100)
+    {
+        nSubsidy = 5 * COIN;
     }
     else 
     {
@@ -2309,7 +2313,7 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
 }
 
 // Protected by cs_main
-static VersionBitsCache versionbitscache;
+VersionBitsCache versionbitscache;
 
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
