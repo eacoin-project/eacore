@@ -1,14 +1,19 @@
 # Copyright (c) 2014-2015 The Bitcoin Core developers
-# Distributed under the MIT software license, see the accompanying
+# Copyright (c) 2014-2017 The EACoin Core developers
+# Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+
 #
 # Helpful routines for regression testing
 #
 
-# Add python-eacoinrpc to module search path:
+# Add python-bitcoinrpc to module search path:
 import os
 import sys
 
+from binascii import hexlify, unhexlify
+from base64 import b64encode
 from decimal import Decimal, ROUND_DOWN
 import json
 import random
@@ -16,12 +21,33 @@ import shutil
 import subprocess
 import time
 import re
+import errno
 
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
 
 COVERAGE_DIR = None
 
+#Set Mocktime default to OFF.
+#MOCKTIME is only needed for scripts that use the
+#cached version of the blockchain.  If the cached
+#version of the blockchain is used without MOCKTIME
+#then the mempools will not sync due to IBD.
+MOCKTIME = 0
+
+def enable_mocktime():
+    #For backwared compatibility of the python scripts
+    #with previous versions of the cache, set MOCKTIME 
+    #to regtest genesis time + (201 * 156)
+    global MOCKTIME
+    MOCKTIME = 1417713337 + (201 * 156)
+
+def disable_mocktime():
+    global MOCKTIME
+    MOCKTIME = 0
+
+def get_mocktime():
+    return MOCKTIME
 
 def enable_coverage(dirname):
     """Maintain a log of which RPC calls are made during testing."""
@@ -54,6 +80,15 @@ def get_rpc_proxy(url, node_number, timeout=None):
 
     return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
 
+def get_mnsync_status(node):
+    result = node.mnsync("status")
+    return result['IsSynced']
+
+def wait_to_sync(node):
+    synced = False
+    while not synced:
+        synced = get_mnsync_status(node)
+        time.sleep(0.5)
 
 def p2p_port(n):
     return 11000 + n + os.getpid()%999
@@ -61,7 +96,7 @@ def rpc_port(n):
     return 12000 + n + os.getpid()%999
 
 def check_json_precision():
-    """Make sure json library being used does not lose precision converting EAC values"""
+    """Make sure json library being used does not lose precision converting BTC values"""
     n = Decimal("20000000.00000003")
     satoshis = int(json.loads(json.dumps(float(n)))*1.0e8)
     if satoshis != 2000000000000003:
@@ -69,6 +104,15 @@ def check_json_precision():
 
 def count_bytes(hex_string):
     return len(bytearray.fromhex(hex_string))
+
+def bytes_to_hex_str(byte_str):
+    return hexlify(byte_str).decode('ascii')
+
+def hex_str_to_bytes(hex_str):
+    return unhexlify(hex_str.encode('ascii'))
+
+def str_to_b64str(string):
+    return b64encode(string.encode('utf-8')).decode('ascii')
 
 def sync_blocks(rpc_connections, wait=1):
     """
@@ -95,7 +139,11 @@ def sync_mempools(rpc_connections, wait=1):
             break
         time.sleep(wait)
 
-eacoind_processes = {}
+def sync_masternodes(rpc_connections):
+    for node in rpc_connections:
+        wait_to_sync(node)
+
+bitcoind_processes = {}
 
 def initialize_datadir(dirname, n):
     datadir = os.path.join(dirname, "node"+str(n))
@@ -110,11 +158,33 @@ def initialize_datadir(dirname, n):
         f.write("listenonion=0\n")
     return datadir
 
+def rpc_url(i, rpchost=None):
+    return "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
+
+def wait_for_bitcoind_start(process, url, i):
+    '''
+    Wait for eacoind to start. This means that RPC is accessible and fully initialized.
+    Raise an exception if eacoind exits during initialization.
+    '''
+    while True:
+        if process.poll() is not None:
+            raise Exception('eacoind exited with status %i during initialization' % process.returncode)
+        try:
+            rpc = get_rpc_proxy(url, i)
+            blocks = rpc.getblockcount()
+            break # break out of loop on success
+        except IOError as e:
+            if e.errno != errno.ECONNREFUSED: # Port not yet open?
+                raise # unknown IO error
+        except JSONRPCException as e: # Initialization phase
+            if e.error['code'] != -28: # RPC in warmup?
+                raise # unkown JSON RPC exception
+        time.sleep(0.25)
+
 def initialize_chain(test_dir):
     """
     Create (or copy from cache) a 200-block-long chain and
     4 wallets.
-    eacoind and eacoin-cli must be in search path.
     """
 
     if (not os.path.isdir(os.path.join("cache","node0"))
@@ -127,49 +197,46 @@ def initialize_chain(test_dir):
             if os.path.isdir(os.path.join("cache","node"+str(i))):
                 shutil.rmtree(os.path.join("cache","node"+str(i)))
 
-        devnull = open(os.devnull, "w")
         # Create cache directories, run eacoinds:
         for i in range(4):
             datadir=initialize_datadir("cache", i)
             args = [ os.getenv("EACOIND", "eacoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
-            eacoind_processes[i] = subprocess.Popen(args)
+            bitcoind_processes[i] = subprocess.Popen(args)
             if os.getenv("PYTHON_DEBUG", ""):
-                print "initialize_chain: eacoind started, calling eacoin-cli -rpcwait getblockcount"
-            subprocess.check_call([ os.getenv("EACOINCLI", "eacoin-cli"), "-datadir="+datadir,
-                                    "-rpcwait", "getblockcount"], stdout=devnull)
+                print "initialize_chain: eacoind started, waiting for RPC to come up"
+            wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
             if os.getenv("PYTHON_DEBUG", ""):
-                print "initialize_chain: eacoin-cli -rpcwait getblockcount completed"
-        devnull.close()
+                print "initialize_chain: RPC succesfully started"
 
         rpcs = []
-
         for i in range(4):
             try:
-                url = "http://rt:rt@127.0.0.1:%d" % (rpc_port(i),)
-                rpcs.append(get_rpc_proxy(url, i))
+                rpcs.append(get_rpc_proxy(rpc_url(i), i))
             except:
                 sys.stderr.write("Error connecting to "+url+"\n")
                 sys.exit(1)
 
         # Create a 200-block-long chain; each of the 4 nodes
         # gets 25 mature blocks and 25 immature.
-        # blocks are created with timestamps 10 minutes apart, starting
-        # at 1 Jan 2014
-        block_time = 1388534400
+        # blocks are created with timestamps 156 seconds apart
+        # starting from 31356 seconds in the past
+        enable_mocktime()
+        block_time = get_mocktime() - (201 * 156)
         for i in range(2):
             for peer in range(4):
                 for j in range(25):
                     set_node_times(rpcs, block_time)
                     rpcs[peer].generate(1)
-                    block_time += 10*60
+                    block_time += 156
                 # Must sync before next peer starts generating blocks
                 sync_blocks(rpcs)
 
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
-        wait_eacoinds()
+        wait_bitcoinds()
+        disable_mocktime()
         for i in range(4):
             os.remove(log_filename("cache", i, "debug.log"))
             os.remove(log_filename("cache", i, "db.log"))
@@ -219,20 +286,15 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     if binary is None:
         binary = os.getenv("EACOIND", "eacoind")
     # RPC tests still depend on free transactions
-    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000" ]
+    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000", "-mocktime="+str(get_mocktime()) ]
     if extra_args is not None: args.extend(extra_args)
-    eacoind_processes[i] = subprocess.Popen(args)
-    devnull = open(os.devnull, "w")
+    bitcoind_processes[i] = subprocess.Popen(args)
     if os.getenv("PYTHON_DEBUG", ""):
-        print "start_node: eacoind started, calling eacoin-cli -rpcwait getblockcount"
-    subprocess.check_call([ os.getenv("EACOINCLI", "eacoin-cli"), "-datadir="+datadir] +
-                          _rpchost_to_args(rpchost)  +
-                          ["-rpcwait", "getblockcount"], stdout=devnull)
+        print "start_node: eacoind started, waiting for RPC to come up"
+    url = rpc_url(i, rpchost)
+    wait_for_bitcoind_start(bitcoind_processes[i], url, i)
     if os.getenv("PYTHON_DEBUG", ""):
-        print "start_node: calling eacoin-cli -rpcwait getblockcount returned"
-    devnull.close()
-    url = "http://rt:rt@%s:%d" % (rpchost or '127.0.0.1', rpc_port(i))
-
+        print "start_node: RPC succesfully started"
     proxy = get_rpc_proxy(url, i, timeout=timewait)
 
     if COVERAGE_DIR:
@@ -246,15 +308,22 @@ def start_nodes(num_nodes, dirname, extra_args=None, rpchost=None, binary=None):
     """
     if extra_args is None: extra_args = [ None for i in range(num_nodes) ]
     if binary is None: binary = [ None for i in range(num_nodes) ]
-    return [ start_node(i, dirname, extra_args[i], rpchost, binary=binary[i]) for i in range(num_nodes) ]
+    rpcs = []
+    try:
+        for i in range(num_nodes):
+            rpcs.append(start_node(i, dirname, extra_args[i], rpchost, binary=binary[i]))
+    except: # If one node failed to start, stop the others
+        stop_nodes(rpcs)
+        raise
+    return rpcs
 
 def log_filename(dirname, n_node, logname):
     return os.path.join(dirname, "node"+str(n_node), "regtest", logname)
 
 def stop_node(node, i):
     node.stop()
-    eacoind_processes[i].wait()
-    del eacoind_processes[i]
+    bitcoind_processes[i].wait()
+    del bitcoind_processes[i]
 
 def stop_nodes(nodes):
     for node in nodes:
@@ -265,11 +334,11 @@ def set_node_times(nodes, t):
     for node in nodes:
         node.setmocktime(t)
 
-def wait_eacoinds():
-    # Wait for all eacoinds to cleanly exit
-    for eacoind in eacoind_processes.values():
-        eacoind.wait()
-    eacoind_processes.clear()
+def wait_bitcoinds():
+    # Wait for all bitcoinds to cleanly exit
+    for bitcoind in bitcoind_processes.values():
+        bitcoind.wait()
+    bitcoind_processes.clear()
 
 def connect_nodes(from_connection, node_num):
     ip_port = "127.0.0.1:"+str(p2p_port(node_num))
@@ -424,9 +493,40 @@ def assert_is_hash_string(string, length=64):
         raise AssertionError(
             "String %r contains invalid characters for a hash." % string)
 
-def satoshi_round(amount):
-    return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+def assert_array_result(object_array, to_match, expected, should_not_find = False):
+    """
+        Pass in array of JSON objects, a dictionary with key/value pairs
+        to match against, and another dictionary with expected key/value
+        pairs.
+        If the should_not_find flag is true, to_match should not be found
+        in object_array
+        """
+    if should_not_find == True:
+        assert_equal(expected, { })
+    num_matched = 0
+    for item in object_array:
+        all_match = True
+        for key,value in to_match.items():
+            if item[key] != value:
+                all_match = False
+        if not all_match:
+            continue
+        elif should_not_find == True:
+            num_matched = num_matched+1
+        for key,value in expected.items():
+            if item[key] != value:
+                raise AssertionError("%s : expected %s=%s"%(str(item), str(key), str(value)))
+            num_matched = num_matched+1
+    if num_matched == 0 and should_not_find != True:
+        raise AssertionError("No objects matched %s"%(str(to_match)))
+    if num_matched > 0 and should_not_find == True:
+        raise AssertionError("Objects were found %s"%(str(to_match)))
 
+def satoshi_round(amount):
+    return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+
+# Helper to create at least "count" utxos
+# Pass in a fee that is sufficient for relay and mining new transactions.
 def create_confirmed_utxos(fee, node, count):
     node.generate(int(0.5*count)+101)
     utxos = node.listunspent()
@@ -454,6 +554,8 @@ def create_confirmed_utxos(fee, node, count):
     assert(len(utxos) >= count)
     return utxos
 
+# Create large OP_RETURN txouts that can be appended to a transaction
+# to make it large (helper for constructing large transactions).
 def gen_return_txouts():
     # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
     # So we have big transactions (and therefore can't fit very many into each block)
@@ -472,6 +574,16 @@ def gen_return_txouts():
         txouts = txouts + script_pubkey
     return txouts
 
+def create_tx(node, coinbase, to_address, amount):
+    inputs = [{ "txid" : coinbase, "vout" : 0}]
+    outputs = { to_address : amount }
+    rawtx = node.createrawtransaction(inputs, outputs)
+    signresult = node.signrawtransaction(rawtx)
+    assert_equal(signresult["complete"], True)
+    return signresult["hex"]
+
+# Create a spend of each passed-in utxo, splicing in "txouts" to each raw
+# transaction to make it large.  See gen_return_txouts() above.
 def create_lots_of_big_transactions(node, txouts, utxos, fee):
     addr = node.getnewaddress()
     txids = []

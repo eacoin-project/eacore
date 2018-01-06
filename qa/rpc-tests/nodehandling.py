@@ -7,7 +7,7 @@
 # Test node handling
 #
 
-from test_framework.test_framework import EACoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 try:
@@ -19,7 +19,7 @@ try:
 except ImportError:
     import urlparse
 
-class NodeHandlingTest (EACoinTestFramework):
+class NodeHandlingTest (BitcoinTestFramework):
     def run_test(self):
         ###########################
         # setban/listbanned tests #

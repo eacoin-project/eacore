@@ -341,7 +341,7 @@ static bool WriteBinaryFile(const std::string &filename, const std::string &data
     return true;
 }
 
-/****** EACoin specific TorController implementation ********/
+/****** Bitcoin specific TorController implementation ********/
 
 /** Controller that connects to Tor control socket, authenticate, then create
  * and maintain a ephemeral hidden service.
@@ -394,6 +394,9 @@ TorController::TorController(struct event_base* base, const std::string& target)
     target(target), conn(base), reconnect(true), reconnect_ev(0),
     reconnect_timeout(RECONNECT_TIMEOUT_START)
 {
+    reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
+    if (!reconnect_ev)
+        LogPrintf("tor: Failed to create event for reconnection: out of memory?\n");
     // Start connection attempts immediately
     if (!conn.Connect(target, boost::bind(&TorController::connected_cb, this, _1),
          boost::bind(&TorController::disconnected_cb, this, _1) )) {
@@ -409,8 +412,10 @@ TorController::TorController(struct event_base* base, const std::string& target)
 
 TorController::~TorController()
 {
-    if (reconnect_ev)
-        event_del(reconnect_ev);
+    if (reconnect_ev) {
+        event_free(reconnect_ev);
+        reconnect_ev = 0;
+    }
     if (service.IsValid()) {
         RemoveLocal(service);
     }
@@ -430,7 +435,7 @@ void TorController::add_onion_cb(TorControlConnection& conn, const TorControlRep
         }
 
         service = CService(service_id+".onion", GetListenPort(), false);
-        LogPrintf("tor: Got service ID %s, advertizing service %s\n", service_id, service.ToString());
+        LogPrintf("tor: Got service ID %s, advertising service %s\n", service_id, service.ToString());
         if (WriteBinaryFile(GetPrivateKeyFile(), private_key)) {
             LogPrint("tor", "tor: Cached service private key to %s\n", GetPrivateKeyFile());
         } else {
@@ -455,7 +460,7 @@ void TorController::auth_cb(TorControlConnection& conn, const TorControlReply& r
         if (GetArg("-onion", "") == "") {
             proxyType addrOnion = proxyType(CService("127.0.0.1", 9050), true);
             SetProxy(NET_TOR, addrOnion);
-            SetReachable(NET_TOR);
+            SetLimited(NET_TOR, false);
         }
 
         // Finally - now create the service
@@ -611,7 +616,7 @@ void TorController::connected_cb(TorControlConnection& conn)
 
 void TorController::disconnected_cb(TorControlConnection& conn)
 {
-    // Stop advertizing service when disconnected
+    // Stop advertising service when disconnected
     if (service.IsValid())
         RemoveLocal(service);
     service = CService();
@@ -622,8 +627,8 @@ void TorController::disconnected_cb(TorControlConnection& conn)
 
     // Single-shot timer for reconnect. Use exponential backoff.
     struct timeval time = MillisToTimeval(int64_t(reconnect_timeout * 1000.0));
-    reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
-    event_add(reconnect_ev, &time);
+    if (reconnect_ev)
+        event_add(reconnect_ev, &time);
     reconnect_timeout *= RECONNECT_TIMEOUT_EXP;
 }
 
@@ -687,10 +692,15 @@ void InterruptTorControl()
 
 void StopTorControl()
 {
+    // timed_join() avoids the wallet not closing during a repair-restart. For a 'normal' wallet exit
+    // it behaves for our cases exactly like the normal join()
     if (base) {
-        torControlThread.join();
+#if BOOST_VERSION >= 105000
+        torControlThread.try_join_for(boost::chrono::seconds(1));
+#else
+        torControlThread.timed_join(boost::posix_time::seconds(1));
+#endif
         event_base_free(base);
         base = 0;
     }
 }
-

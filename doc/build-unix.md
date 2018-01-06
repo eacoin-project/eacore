@@ -6,7 +6,7 @@ Some notes on how to build EACoin Core in Unix.
 
 Note
 ---------------------
-Always use absolute paths to configure and compile eacoin and the dependencies,
+Always use absolute paths to configure and compile EACoin Core and the dependencies,
 for example, when specifying the the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
@@ -73,10 +73,10 @@ If that doesn't work, you can install all boost development packages with:
 
     sudo apt-get install libboost-all-dev
 
-BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~eacoin/+archive/eacoin).
+BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
 You can add the repository and install using the following commands:
 
-    sudo add-apt-repository ppa:eacoin/eacoin
+    sudo add-apt-repository ppa:bitcoin/bitcoin
     sudo apt-get update
     sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
@@ -178,7 +178,7 @@ If you need to build Boost yourself:
 
 Security
 --------
-To help make your eacoin installation more secure by making certain attacks impossible to
+To help make your EACoin installation more secure by making certain attacks impossible to
 exploit even if a vulnerability is found, binaries are hardened by default.
 This can be disabled with:
 
@@ -202,7 +202,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-    	scanelf -e ./eacoin
+    	scanelf -e ./eacoind
 
     The output should contain:
 
@@ -211,13 +211,13 @@ Hardening enables the following features:
 
 * Non-executable Stack
     If the stack is executable then trivial stack based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, eacoin should be built with a non-executable stack
+    vulnerable buffers are found. By default, EACoin Core should be built with a non-executable stack
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
     executable without the non-executable stack protection.
 
     To verify that the stack is non-executable after compiling use:
-    `scanelf -e ./eacoin`
+    `scanelf -e ./eacoind`
 
     the output should contain:
 	STK/REL/PTL
@@ -227,7 +227,7 @@ Hardening enables the following features:
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, eacoin may be compiled in
+When the intention is to run only a P2P node without a wallet, EACoin Core may be compiled in
 disable-wallet mode with:
 
     ./configure --disable-wallet
@@ -263,4 +263,3 @@ To build executables for ARM:
 
 
 For further documentation on the depends system see [README.md](../depends/README.md) in the depends directory.
->>>>>>> 3e55b3a... [doc] added depends cross compile info

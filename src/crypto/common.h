@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_CRYPTO_COMMON_H
-#define EACOIN_CRYPTO_COMMON_H
+#ifndef BITCOIN_CRYPTO_COMMON_H
+#define BITCOIN_CRYPTO_COMMON_H
 
 #if defined(HAVE_CONFIG_H)
 #include "eacoin-config.h"
@@ -63,4 +63,4 @@ void static inline WriteBE64(unsigned char* ptr, uint64_t x)
     *((uint64_t*)ptr) = htobe64(x);
 }
 
-#endif // EACOIN_CRYPTO_COMMON_H
+#endif // BITCOIN_CRYPTO_COMMON_H

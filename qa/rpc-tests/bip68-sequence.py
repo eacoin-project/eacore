@@ -7,13 +7,12 @@
 # Test BIP68 implementation
 #
 
-from test_framework.test_framework import EACoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.mininode import *
 from test_framework.blocktools import *
 
-COIN = 100000000
 SEQUENCE_LOCKTIME_DISABLE_FLAG = (1<<31)
 SEQUENCE_LOCKTIME_TYPE_FLAG = (1<<22) # this means use time (0 means height)
 SEQUENCE_LOCKTIME_GRANULARITY = 9 # this is a bit-shift
@@ -22,7 +21,7 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "64: non-BIP68-final"
 
-class BIP68Test(EACoinTestFramework):
+class BIP68Test(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
@@ -64,7 +63,7 @@ class BIP68Test(EACoinTestFramework):
     def test_disable_flag(self):
         # Create some unconfirmed inputs
         new_addr = self.nodes[0].getnewaddress()
-        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 EAC
+        self.nodes[0].sendtoaddress(new_addr, 2) # send 2 BTC
 
         utxos = self.nodes[0].listunspent(0, 0)
         assert(len(utxos) > 0)

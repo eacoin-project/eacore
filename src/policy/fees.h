@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The EACoin developers
+// Copyright (c) 2009-2015 The Bitcoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef EACOIN_POLICYESTIMATOR_H
-#define EACOIN_POLICYESTIMATOR_H
+#ifndef BITCOIN_POLICYESTIMATOR_H
+#define BITCOIN_POLICYESTIMATOR_H
 
 #include "amount.h"
 #include "uint256.h"
@@ -180,7 +180,7 @@ public:
 /** Track confirm delays up to 25 blocks, can't estimate beyond that */
 static const unsigned int MAX_BLOCK_CONFIRMS = 25;
 
-/** Decay of .998 is a half-life of 346 blocks or about 2.4 days */
+/** Decay of .998 is a half-life of 346 blocks or about 14.4 hours */
 static const double DEFAULT_DECAY = .998;
 
 /** Require greater than 95% of X fee transactions to be confirmed within Y blocks for X to be big enough */
@@ -286,4 +286,4 @@ private:
     CFeeRate feeLikely, feeUnlikely;
     double priLikely, priUnlikely;
 };
-#endif /*EACOIN_POLICYESTIMATOR_H */
+#endif /*BITCOIN_POLICYESTIMATOR_H */

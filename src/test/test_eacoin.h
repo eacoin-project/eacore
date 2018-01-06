@@ -1,5 +1,5 @@
-#ifndef EACOIN_TEST_TEST_EACOIN_H
-#define EACOIN_TEST_TEST_EACOIN_H
+#ifndef BITCOIN_TEST_TEST_EACOIN_H
+#define BITCOIN_TEST_TEST_EACOIN_H
 
 #include "chainparamsbase.h"
 #include "key.h"

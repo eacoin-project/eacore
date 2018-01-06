@@ -110,7 +110,7 @@ to see it.
 
 **testnet and regtest modes**
 
-Run with the -testnet option to run with "play eacoins" on the test network, if you
+Run with the -testnet option to run with "play coins" on the test network, if you
 are testing multi-machine code that needs to operate across the internet.
 
 If you are testing something that can run on one machine, run with the -regtest option.
@@ -154,7 +154,7 @@ Threads
 
 - ThreadMapPort : Universal plug-and-play startup/shutdown
 
-- ThreadSocketHandler : Sends/Receives data from peers on port 8333.
+- ThreadSocketHandler : Sends/Receives data from peers on port 9999.
 
 - ThreadOpenAddedConnections : Opens network connections to added nodes.
 
@@ -166,9 +166,11 @@ Threads
 
 - ThreadFlushWalletDB : Close the wallet.dat file if it hasn't been used in 500ms.
 
-- ThreadRPCServer : Remote procedure call handler, listens on port 8332 for connections and services them.
+- ThreadRPCServer : Remote procedure call handler, listens on port 9998 for connections and services them.
 
-- EACoinMiner : Generates eacoins (if wallet is enabled).
+- BitcoinMiner : Generates coins (if wallet is enabled).
+
+- ThreadCheckDarkSendPool : Runs masternode list and sync data update loops
 
 - Shutdown : Does an orderly shutdown of everything.
 
@@ -327,8 +329,7 @@ Threads and synchronization
 ----------------------------
 
 - Build and run tests with `-DDEBUG_LOCKORDER` to verify that no potential
-  deadlocks are introduced. As of 0.12, this is defined by default when
-  configuring with `--enable-debug`
+  deadlocks are introduced.
 
 - When using `LOCK`/`TRY_LOCK` be aware that the lock exists in the context of
   the current scope, so surround the statement and the code that needs the lock

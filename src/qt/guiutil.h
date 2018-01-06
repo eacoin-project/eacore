@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_QT_GUIUTIL_H
-#define EACOIN_QT_GUIUTIL_H
+#ifndef BITCOIN_QT_GUIUTIL_H
+#define BITCOIN_QT_GUIUTIL_H
 
 #include "amount.h"
 
@@ -45,9 +45,9 @@ namespace GUIUtil
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
     // Parse "eacoin:" URI into recipient object, return true on successful parsing
-    bool parseEACoinURI(const QUrl &uri, SendCoinsRecipient *out);
-    bool parseEACoinURI(QString uri, SendCoinsRecipient *out);
-    QString formatEACoinURI(const SendCoinsRecipient &info);
+    bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
+    bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
+    QString formatBitcoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, const CAmount& amount);
@@ -113,6 +113,15 @@ namespace GUIUtil
 
     // Open debug.log
     void openDebugLogfile();
+	
+    // Open eacoin.conf
+    void openConfigfile();	
+
+    // Open masternode.conf
+    void openMNConfigfile();	
+
+    // Browse backup folder
+    void showBackups();
 
     // Replace invalid default fonts with known good ones
     void SubstituteFonts(const QString& language);
@@ -177,11 +186,20 @@ namespace GUIUtil
     bool GetStartOnSystemStartup();
     bool SetStartOnSystemStartup(bool fAutoStart);
 
+    /** Modify Qt network specific settings on migration */
+    void migrateQtSettings();
+
     /** Save window size and position */
     void saveWindowGeometry(const QString& strSetting, QWidget *parent);
     /** Restore window size and position */
     void restoreWindowGeometry(const QString& strSetting, const QSize &defaultSizeIn, QWidget *parent);
 
+    /** Load global CSS theme */
+    QString loadStyleSheet();
+
+    /** Return name of current CSS theme */
+    QString getThemeName();
+    
     /* Convert QString to OS specific boost path through UTF-8 */
     boost::filesystem::path qstringToBoostPath(const QString &path);
 
@@ -216,4 +234,4 @@ namespace GUIUtil
 
 } // namespace GUIUtil
 
-#endif // EACOIN_QT_GUIUTIL_H
+#endif // BITCOIN_QT_GUIUTIL_H

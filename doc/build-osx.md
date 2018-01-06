@@ -1,6 +1,6 @@
 Mac OS X Build Instructions and Notes
 ====================================
-This guide will show you how to build eacoind (headless client) for OS X.
+This guide will show you how to build eacoind (headless client) for OSX.
 
 Notes
 -----
@@ -32,18 +32,19 @@ Instructions: Homebrew
 
 #### Install dependencies using Homebrew
 
-    brew install autoconf automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf qt5 libevent
+    brew install autoconf automake berkeley-db4 libtool boost miniupnpc openssl pkg-config protobuf libevent
 
-NOTE: Building with Qt4 is still supported, however, could result in a broken UI. As such, building with Qt5 is recommended.
+NOTE: Building with Qt4 is still supported, however, could result in a broken UI. As such, building with Qt5 is recommended. Qt5 5.7 requires C++11 which EACoin Core doesn't fully support yet, Qt5 5.6.2 has some other issues, so make sure to install Qt version < 5.6.2 (5.6.1-1 is recommended).
+    brew install https://raw.githubusercontent.com/Homebrew/homebrew-core/e6d954bab88e89c5582498157077756900865070/Formula/qt5.rb
 
-### Building `eacoin`
+### Building EACoin Core
 
 1. Clone the GitHub tree to get the source code and go into the directory.
 
-        git clone https://github.com/eacoin/eacoin.git
+        git clone https://github.com/eacoinpay/eacoin.git
         cd eacoin
 
-2.  Build eacoin-core:
+2.  Build EACoin Core:
     This will configure and build the headless eacoin binaries as well as the gui (if Qt is found).
     You can disable the gui build by passing `--without-gui` to configure.
 
@@ -102,14 +103,14 @@ directory. We have to first create the RPC configuration file, though.
 Run `./eacoind` to get the filename where it should be put, or just try these
 commands:
 
-    echo -e "rpcuser=eacoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/EACoin/eacoin.conf"
-    chmod 600 "/Users/${USER}/Library/Application Support/EACoin/eacoin.conf"
+    echo -e "rpcuser=eacoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/EACoinCore/eacoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/EACoinCore/eacoin.conf"
 
 The next time you run it, it will start downloading the blockchain, but it won't
 output anything while it's doing this. This process may take several hours;
 you can monitor its process by looking at the debug.log file, like this:
 
-    tail -f $HOME/Library/Application\ Support/EACoin/debug.log
+    tail -f $HOME/Library/Application\ Support/EACoinCore/debug.log
 
 Other commands:
 -------

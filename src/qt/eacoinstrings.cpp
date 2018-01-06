@@ -51,6 +51,9 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "Delete all wallet transactions and only recover those parts of the "
 "blockchain through -rescan on startup"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
+"Disable all EACoin specific functionality (Masternodes, PrivateSend, "
+"InstantSend, Governance) (0-1, default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
 "Discover own IP addresses (default: 1 when listening and no -externalip or -"
 "proxy)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
@@ -58,6 +61,15 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "COPYING or <http://www.opensource.org/licenses/mit-license.php>."),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Do not keep transactions in the mempool longer than <n> hours (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Enable InstantSend, show confirmations for locked transactions (0-1, "
+"default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Enable multiple PrivateSend mixing sessions per block, experimental (0-1, "
+"default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Enable use of automated PrivateSend for funds stored in this wallet (0-1, "
+"default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Error reading wallet.dat! All keys read correctly, but transaction data or "
 "address book entries might be missing or incorrect."),
@@ -67,11 +79,18 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "Execute command when a relevant alert is received or we see a really long "
 "fork (%s in cmd is replaced by message)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
+"Execute command when a wallet InstantSend transaction is successfully locked "
+"(%s in cmd is replaced by TxID)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
 "Execute command when a wallet transaction changes (%s in cmd is replaced by "
 "TxID)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Execute command when the best block changes (%s in cmd is replaced by block "
 "hash)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Failed to create backup, file already exists! This could happen if you "
+"restarted wallet in less than 60 seconds. You can continue if you are ok "
+"with this."),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Fees (in %s/kB) smaller than this are considered zero fee for relaying, "
 "mining and transaction creation (default: %s)"),
@@ -82,6 +101,9 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "Force relay of transactions from whitelisted peers even they violate local "
 "relay policy (default: %d)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
+"Found unconfirmed denominated outputs, will wait till they confirm to "
+"continue."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
 "How thorough the block verification of -checkblocks is (0-4, default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "If <category> is not supplied or if <category> = 1, output all debugging "
@@ -90,11 +112,29 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "If paytxfee is not set, include enough fee so transactions begin "
 "confirmation on average within n blocks (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
+"InstantSend doesn't support sending values that high yet. Transactions are "
+"currently limited to %1 EAG."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"InstantSend requires inputs with at least %d confirmations, you might need "
+"to wait a few minutes and try again."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
+"Maintain a full address index, used to query for the balance, txids and "
+"unspent outputs for addresses (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Maintain a full spent index, used to query the spending txid and input index "
+"for an outpoint (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
 "Maintain a full transaction index, used by the getrawtransaction rpc call "
 "(default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Maintain a timestamp index for block hashes, used to query blocks hashes by "
+"a range of timestamps (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Maintain at most <n> connections to peers (temporary service connections "
+"excluded) (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Maximum size of data in data carrier transactions we relay and mine "
 "(default: %u)"),
@@ -102,12 +142,21 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "Maximum total fees (in %s) to use in a single wallet transaction; setting "
 "this too low may abort large transactions (default: %s)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
+"Name to construct url for KeePass entry that stores the wallet passphrase"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
 "Number of seconds to keep misbehaving peers from reconnecting (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Output debugging information (default: %u, supplying <category> is optional)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong EACoin Core will not work properly."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"PrivateSend uses exact denominated amounts to send funds, you might simply "
+"need to anonymize some more coins."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Provide liquidity to PrivateSend by infrequently mixing coins on a continual "
+"basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, "
+"low fees)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Prune configured below the minimum of %d MiB.  Please use a higher number."),
 QT_TRANSLATE_NOOP("eacoin-core", ""
@@ -136,6 +185,11 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "Set the number of threads for coin generation if enabled (-1 = all cores, "
 "default: %d)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
+"Show N confirmations for a successfully locked transaction (0-9999, default: "
+"%u)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Specify full path to directory for automatic wallet backups (must exist)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
 "Support filtering of blocks and transaction with bloom filters (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "The block database contains a block which appears to be from the future. "
@@ -158,14 +212,24 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = "
 "no limit (default: %d)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
-"Unable to bind to %s on this computer. EACoin Core is probably already "
-"running."),
+"Unable to bind to %s on this computer. EACoin Core is probably already running."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Unable to locate enough PrivateSend denominated funds for this transaction."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Unable to locate enough PrivateSend non-denominated funds for this "
+"transaction that are not equal 1000 EAG."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Unable to locate enough funds for this transaction that are not equal 1000 "
+"EAG."),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Unsupported argument -socks found. Setting SOCKS version isn't possible "
 "anymore, only SOCKS5 proxies are supported."),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/"
 "or -whitelistforcerelay."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Use N separate masternodes for each denominated input to mix funds (2-16, "
+"default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Use UPnP to map the listening port (default: 1 when listening and no -proxy)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
@@ -176,11 +240,16 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "comes in the format: <USERNAME>:<SALT>$<HASH>. A canonical python script is "
 "included in share/rpcuser. This option can be specified multiple times"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
+"WARNING! Failed to replenish keypool, please unlock your wallet to do so."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
 "WARNING: abnormally high number of blocks generated, %d blocks received in "
 "the last %d hours (%d expected)"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "WARNING: check your network connection, %d blocks received in the last %d "
 "hours (%d expected)"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"Wallet is locked, can't replenish keypool! Automatic backups and mixing are "
+"disabled, please unlock your wallet to replenish keypool."),
 QT_TRANSLATE_NOOP("eacoin-core", ""
 "Warning: The network does not appear to fully agree! Some miners appear to "
 "be experiencing issues."),
@@ -201,10 +270,19 @@ QT_TRANSLATE_NOOP("eacoin-core", ""
 "Whitelisted peers cannot be DoS banned and their transactions are always "
 "relayed, even if they are already in the mempool, useful e.g. for a gateway"),
 QT_TRANSLATE_NOOP("eacoin-core", ""
+"You must specify a masternodeprivkey in the configuration. Please see "
+"documentation for help."),
+QT_TRANSLATE_NOOP("eacoin-core", ""
 "You need to rebuild the database using -reindex to go back to unpruned "
 "mode.  This will redownload the entire blockchain"),
+QT_TRANSLATE_NOOP("eacoin-core", ""
+"masternodeaddr option is deprecated. Please use masternode.conf to manage "
+"your remote masternodes."),
+QT_TRANSLATE_NOOP("eacoin-core", "%s - %d confirmations"),
+QT_TRANSLATE_NOOP("eacoin-core", "(%d could be used only on mainnet)"),
 QT_TRANSLATE_NOOP("eacoin-core", "(default: %s)"),
 QT_TRANSLATE_NOOP("eacoin-core", "(default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "(must be %d for mainnet)"),
 QT_TRANSLATE_NOOP("eacoin-core", "-maxmempool must be at least %d MB"),
 QT_TRANSLATE_NOOP("eacoin-core", "<category> can be:"),
 QT_TRANSLATE_NOOP("eacoin-core", "Accept command line and JSON-RPC commands"),
@@ -213,31 +291,46 @@ QT_TRANSLATE_NOOP("eacoin-core", "Accept public REST requests (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Activating best chain..."),
 QT_TRANSLATE_NOOP("eacoin-core", "Add a node to connect to and attempt to keep the connection open"),
 QT_TRANSLATE_NOOP("eacoin-core", "Allow DNS lookups for -addnode, -seednode and -connect"),
+QT_TRANSLATE_NOOP("eacoin-core", "Already have that input."),
 QT_TRANSLATE_NOOP("eacoin-core", "Always query for peer addresses via DNS lookup (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Append comment to the user agent string"),
 QT_TRANSLATE_NOOP("eacoin-core", "Attempt to recover private keys from a corrupt wallet.dat on startup"),
+QT_TRANSLATE_NOOP("eacoin-core", "Automatic backups disabled"),
 QT_TRANSLATE_NOOP("eacoin-core", "Automatically create Tor hidden service (default: %d)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Block creation options:"),
+QT_TRANSLATE_NOOP("eacoin-core", "Can't denominate: no compatible inputs left."),
+QT_TRANSLATE_NOOP("eacoin-core", "Can't find random Masternode."),
+QT_TRANSLATE_NOOP("eacoin-core", "Can't mix while sync in progress."),
 QT_TRANSLATE_NOOP("eacoin-core", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("eacoin-core", "Cannot resolve -bind address: '%s'"),
 QT_TRANSLATE_NOOP("eacoin-core", "Cannot resolve -externalip address: '%s'"),
 QT_TRANSLATE_NOOP("eacoin-core", "Cannot resolve -whitebind address: '%s'"),
 QT_TRANSLATE_NOOP("eacoin-core", "Cannot write default address"),
+QT_TRANSLATE_NOOP("eacoin-core", "Collateral not valid."),
 QT_TRANSLATE_NOOP("eacoin-core", "Connect only to the specified node(s)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Connect through SOCKS5 proxy"),
+QT_TRANSLATE_NOOP("eacoin-core", "Connect to KeePassHttp on port <port> (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Connect to a node to retrieve peer addresses, and disconnect"),
 QT_TRANSLATE_NOOP("eacoin-core", "Connection options:"),
 QT_TRANSLATE_NOOP("eacoin-core", "Copyright (C) 2009-%i The Bitcoin Core Developers"),
+QT_TRANSLATE_NOOP("eacoin-core", "Copyright (C) 2014-%i The EACoin Core Developers"),
 QT_TRANSLATE_NOOP("eacoin-core", "Corrupted block database detected"),
+QT_TRANSLATE_NOOP("eacoin-core", "Could not parse masternode.conf"),
 QT_TRANSLATE_NOOP("eacoin-core", "Debugging/Testing options:"),
 QT_TRANSLATE_NOOP("eacoin-core", "Do not load the wallet and disable wallet RPC calls"),
 QT_TRANSLATE_NOOP("eacoin-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("eacoin-core", "Done loading"),
+QT_TRANSLATE_NOOP("eacoin-core", "ERROR! Failed to create automatic backup"),
 QT_TRANSLATE_NOOP("eacoin-core", "Enable publish hash block in <address>"),
+QT_TRANSLATE_NOOP("eacoin-core", "Enable publish hash transaction (locked via InstantSend) in <address>"),
 QT_TRANSLATE_NOOP("eacoin-core", "Enable publish hash transaction in <address>"),
 QT_TRANSLATE_NOOP("eacoin-core", "Enable publish raw block in <address>"),
+QT_TRANSLATE_NOOP("eacoin-core", "Enable publish raw transaction (locked via InstantSend) in <address>"),
 QT_TRANSLATE_NOOP("eacoin-core", "Enable publish raw transaction in <address>"),
+QT_TRANSLATE_NOOP("eacoin-core", "Enable the client to act as a masternode (0-1, default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Enable transaction replacement in the memory pool (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Entries are full."),
+QT_TRANSLATE_NOOP("eacoin-core", "Error connecting to Masternode."),
 QT_TRANSLATE_NOOP("eacoin-core", "Error initializing block database"),
 QT_TRANSLATE_NOOP("eacoin-core", "Error initializing wallet database environment %s!"),
 QT_TRANSLATE_NOOP("eacoin-core", "Error loading block database"),
@@ -249,17 +342,27 @@ QT_TRANSLATE_NOOP("eacoin-core", "Error reading from database, shutting down."),
 QT_TRANSLATE_NOOP("eacoin-core", "Error"),
 QT_TRANSLATE_NOOP("eacoin-core", "Error: A fatal internal error occurred, see debug.log for details"),
 QT_TRANSLATE_NOOP("eacoin-core", "Error: Disk space is low!"),
+QT_TRANSLATE_NOOP("eacoin-core", "Failed to create backup %s!"),
+QT_TRANSLATE_NOOP("eacoin-core", "Failed to create backup, error: %s"),
+QT_TRANSLATE_NOOP("eacoin-core", "Failed to delete backup, error: %s"),
 QT_TRANSLATE_NOOP("eacoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
+QT_TRANSLATE_NOOP("eacoin-core", "Failed to parse host:port string"),
 QT_TRANSLATE_NOOP("eacoin-core", "Fee (in %s/kB) to add to transactions you send (default: %s)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Found enough users, signing ( waiting %s )"),
+QT_TRANSLATE_NOOP("eacoin-core", "Found enough users, signing ..."),
 QT_TRANSLATE_NOOP("eacoin-core", "Generate coins (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "How many blocks to check at startup (default: %u, 0 = all)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Importing..."),
 QT_TRANSLATE_NOOP("eacoin-core", "Imports blocks from external blk000??.dat file on startup"),
 QT_TRANSLATE_NOOP("eacoin-core", "Include IP addresses in debug output (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Incompatible mode."),
+QT_TRANSLATE_NOOP("eacoin-core", "Incompatible version."),
 QT_TRANSLATE_NOOP("eacoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
 QT_TRANSLATE_NOOP("eacoin-core", "Information"),
 QT_TRANSLATE_NOOP("eacoin-core", "Initialization sanity check failed. EACoin Core is shutting down."),
-QT_TRANSLATE_NOOP("eacoin-core", "Insufficient funds"),
+QT_TRANSLATE_NOOP("eacoin-core", "Input is not valid."),
+QT_TRANSLATE_NOOP("eacoin-core", "InstantSend options:"),
+QT_TRANSLATE_NOOP("eacoin-core", "Insufficient funds."),
 QT_TRANSLATE_NOOP("eacoin-core", "Invalid -onion address: '%s'"),
 QT_TRANSLATE_NOOP("eacoin-core", "Invalid -proxy address: '%s'"),
 QT_TRANSLATE_NOOP("eacoin-core", "Invalid amount for -fallbackfee=<amount>: '%s'"),
@@ -268,28 +371,64 @@ QT_TRANSLATE_NOOP("eacoin-core", "Invalid amount for -minrelaytxfee=<amount>: '%
 QT_TRANSLATE_NOOP("eacoin-core", "Invalid amount for -mintxfee=<amount>: '%s'"),
 QT_TRANSLATE_NOOP("eacoin-core", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Invalid amount for -paytxfee=<amount>: '%s'"),
+QT_TRANSLATE_NOOP("eacoin-core", "Invalid masternodeprivkey. Please see documenation."),
 QT_TRANSLATE_NOOP("eacoin-core", "Invalid netmask specified in -whitelist: '%s'"),
+QT_TRANSLATE_NOOP("eacoin-core", "Invalid port detected in masternode.conf"),
+QT_TRANSLATE_NOOP("eacoin-core", "Invalid script detected."),
+QT_TRANSLATE_NOOP("eacoin-core", "KeePassHttp id for the established association"),
+QT_TRANSLATE_NOOP("eacoin-core", "KeePassHttp key for AES encrypted communication with KeePass"),
+QT_TRANSLATE_NOOP("eacoin-core", "Keep N EAG anonymized (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Keep the transaction memory pool below <n> megabytes (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Last PrivateSend was too recent."),
+QT_TRANSLATE_NOOP("eacoin-core", "Last successful PrivateSend action was too recent."),
+QT_TRANSLATE_NOOP("eacoin-core", "Line: %d"),
 QT_TRANSLATE_NOOP("eacoin-core", "Listen for JSON-RPC connections on <port> (default: %u or testnet: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Listen for connections on <port> (default: %u or testnet: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Loading addresses..."),
 QT_TRANSLATE_NOOP("eacoin-core", "Loading block index..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Loading fullfiled requests cache..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Loading governance cache..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Loading masternode cache..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Loading masternode payment cache..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Loading wallet... (%3.2f %%)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Loading wallet..."),
 QT_TRANSLATE_NOOP("eacoin-core", "Location of the auth cookie (default: data dir)"),
-QT_TRANSLATE_NOOP("eacoin-core", "Maintain at most <n> connections to peers (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Lock is already in place."),
+QT_TRANSLATE_NOOP("eacoin-core", "Lock masternodes from masternode configuration file (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Make the wallet broadcast transactions"),
+QT_TRANSLATE_NOOP("eacoin-core", "Masternode cache is empty, skipping payments and governance cache..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Masternode options:"),
+QT_TRANSLATE_NOOP("eacoin-core", "Masternode queue is full."),
+QT_TRANSLATE_NOOP("eacoin-core", "Masternode:"),
 QT_TRANSLATE_NOOP("eacoin-core", "Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Minimum bytes per sigop in transactions we relay and mine (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Missing input transaction information."),
+QT_TRANSLATE_NOOP("eacoin-core", "Mixing in progress..."),
 QT_TRANSLATE_NOOP("eacoin-core", "Need to specify a port with -whitebind: '%s'"),
+QT_TRANSLATE_NOOP("eacoin-core", "No Masternodes detected."),
+QT_TRANSLATE_NOOP("eacoin-core", "No compatible Masternode found."),
+QT_TRANSLATE_NOOP("eacoin-core", "No errors detected."),
+QT_TRANSLATE_NOOP("eacoin-core", "No funds detected in need of denominating."),
+QT_TRANSLATE_NOOP("eacoin-core", "No matching denominations found for mixing."),
 QT_TRANSLATE_NOOP("eacoin-core", "Node relay options:"),
+QT_TRANSLATE_NOOP("eacoin-core", "Non-standard public key detected."),
+QT_TRANSLATE_NOOP("eacoin-core", "Not compatible with existing transactions."),
 QT_TRANSLATE_NOOP("eacoin-core", "Not enough file descriptors available."),
+QT_TRANSLATE_NOOP("eacoin-core", "Not enough funds to anonymize."),
+QT_TRANSLATE_NOOP("eacoin-core", "Not in the Masternode list."),
+QT_TRANSLATE_NOOP("eacoin-core", "Number of automatic wallet backups (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Only connect to nodes in network <net> (ipv4, ipv6 or onion)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Options:"),
 QT_TRANSLATE_NOOP("eacoin-core", "Password for JSON-RPC connections"),
+QT_TRANSLATE_NOOP("eacoin-core", "Port: %d"),
 QT_TRANSLATE_NOOP("eacoin-core", "Prepend debug output with timestamp (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Print version and exit"),
+QT_TRANSLATE_NOOP("eacoin-core", "PrivateSend is idle."),
+QT_TRANSLATE_NOOP("eacoin-core", "PrivateSend options:"),
+QT_TRANSLATE_NOOP("eacoin-core", "PrivateSend request complete:"),
+QT_TRANSLATE_NOOP("eacoin-core", "PrivateSend request incomplete:"),
 QT_TRANSLATE_NOOP("eacoin-core", "Prune cannot be configured with a negative value."),
 QT_TRANSLATE_NOOP("eacoin-core", "Prune mode is incompatible with -txindex."),
 QT_TRANSLATE_NOOP("eacoin-core", "Pruning blockstore..."),
@@ -303,11 +442,15 @@ QT_TRANSLATE_NOOP("eacoin-core", "Rescan the block chain for missing wallet tran
 QT_TRANSLATE_NOOP("eacoin-core", "Rescanning..."),
 QT_TRANSLATE_NOOP("eacoin-core", "Run in the background as a daemon and accept commands"),
 QT_TRANSLATE_NOOP("eacoin-core", "Send trace/debug info to console instead of debug.log file"),
+QT_TRANSLATE_NOOP("eacoin-core", "Send trace/debug info to debug.log file (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Send transactions as zero-fee transactions if possible (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Session not complete!"),
+QT_TRANSLATE_NOOP("eacoin-core", "Session timed out."),
 QT_TRANSLATE_NOOP("eacoin-core", "Set database cache size in megabytes (%d to %d, default: %d)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Set key pool size to <n> (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Set maximum block size in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Set minimum block size in bytes (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Set the masternode private key"),
 QT_TRANSLATE_NOOP("eacoin-core", "Set the number of threads to service RPC calls (default: %d)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Show all debugging options (usage: --help -help-debug)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Shrink debug.log file on client startup (default: 1 when no -debug)"),
@@ -315,40 +458,70 @@ QT_TRANSLATE_NOOP("eacoin-core", "Signing transaction failed"),
 QT_TRANSLATE_NOOP("eacoin-core", "Specify configuration file (default: %s)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Specify connection timeout in milliseconds (minimum: 1, default: %d)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Specify data directory"),
+QT_TRANSLATE_NOOP("eacoin-core", "Specify masternode configuration file (default: %s)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Specify pid file (default: %s)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Specify wallet file (within data directory)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Specify your own public address"),
 QT_TRANSLATE_NOOP("eacoin-core", "Spend unconfirmed change when sending transactions (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Submitted following entries to masternode: %u / %d"),
+QT_TRANSLATE_NOOP("eacoin-core", "Submitted to masternode, waiting for more entries ( %u / %d ) %s"),
+QT_TRANSLATE_NOOP("eacoin-core", "Submitted to masternode, waiting in queue %s"),
+QT_TRANSLATE_NOOP("eacoin-core", "Synchronization failed"),
+QT_TRANSLATE_NOOP("eacoin-core", "Synchronization finished"),
+QT_TRANSLATE_NOOP("eacoin-core", "Synchronization pending..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Synchronizing governance objects..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Synchronizing masternode payments..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Synchronizing masternodes..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Synchronizing sporks..."),
 QT_TRANSLATE_NOOP("eacoin-core", "The transaction amount is too small to pay the fee"),
 QT_TRANSLATE_NOOP("eacoin-core", "This help message"),
 QT_TRANSLATE_NOOP("eacoin-core", "This is experimental software."),
+QT_TRANSLATE_NOOP("eacoin-core", "This is not a Masternode."),
 QT_TRANSLATE_NOOP("eacoin-core", "Threshold for disconnecting misbehaving peers (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Too many %f denominations, removing."),
 QT_TRANSLATE_NOOP("eacoin-core", "Tor control port password (default: empty)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Tor control port to use if onion listening enabled (default: %s)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Transaction amount too small"),
 QT_TRANSLATE_NOOP("eacoin-core", "Transaction amounts must be positive"),
+QT_TRANSLATE_NOOP("eacoin-core", "Transaction created successfully."),
+QT_TRANSLATE_NOOP("eacoin-core", "Transaction fees are too high."),
+QT_TRANSLATE_NOOP("eacoin-core", "Transaction not valid."),
 QT_TRANSLATE_NOOP("eacoin-core", "Transaction too large for fee policy"),
 QT_TRANSLATE_NOOP("eacoin-core", "Transaction too large"),
 QT_TRANSLATE_NOOP("eacoin-core", "Unable to bind to %s on this computer (bind returned error %s)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Unable to sign spork message, wrong key?"),
 QT_TRANSLATE_NOOP("eacoin-core", "Unable to start HTTP server. See debug log for details."),
 QT_TRANSLATE_NOOP("eacoin-core", "Unknown network specified in -onlynet: '%s'"),
+QT_TRANSLATE_NOOP("eacoin-core", "Unknown response."),
+QT_TRANSLATE_NOOP("eacoin-core", "Unknown state: id = %u"),
 QT_TRANSLATE_NOOP("eacoin-core", "Unsupported argument -benchmark ignored, use -debug=bench."),
 QT_TRANSLATE_NOOP("eacoin-core", "Unsupported argument -debugnet ignored, use -debug=net."),
 QT_TRANSLATE_NOOP("eacoin-core", "Unsupported argument -tor found, use -onion."),
 QT_TRANSLATE_NOOP("eacoin-core", "Upgrade wallet to latest format on startup"),
+QT_TRANSLATE_NOOP("eacoin-core", "Use KeePass 2 integration using KeePassHttp plugin (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "Use UPnP to map the listening port (default: %u)"),
 QT_TRANSLATE_NOOP("eacoin-core", "User Agent comment (%s) contains unsafe characters."),
 QT_TRANSLATE_NOOP("eacoin-core", "Username for JSON-RPC connections"),
+QT_TRANSLATE_NOOP("eacoin-core", "Value more than PrivateSend pool maximum allows."),
 QT_TRANSLATE_NOOP("eacoin-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("eacoin-core", "Verifying wallet..."),
+QT_TRANSLATE_NOOP("eacoin-core", "Very low number of keys left: %d"),
 QT_TRANSLATE_NOOP("eacoin-core", "Wallet %s resides outside data directory %s"),
+QT_TRANSLATE_NOOP("eacoin-core", "Wallet is locked."),
 QT_TRANSLATE_NOOP("eacoin-core", "Wallet needed to be rewritten: restart EACoin Core to complete"),
 QT_TRANSLATE_NOOP("eacoin-core", "Wallet options:"),
+QT_TRANSLATE_NOOP("eacoin-core", "Wallet window title"),
 QT_TRANSLATE_NOOP("eacoin-core", "Warning"),
 QT_TRANSLATE_NOOP("eacoin-core", "Warning: unknown new rules activated (versionbit %i)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Wasn't able to create wallet backup folder %s!"),
 QT_TRANSLATE_NOOP("eacoin-core", "Whether to operate in a blocks only mode (default: %u)"),
+QT_TRANSLATE_NOOP("eacoin-core", "Will retry..."),
 QT_TRANSLATE_NOOP("eacoin-core", "You need to rebuild the database using -reindex to change -txindex"),
+QT_TRANSLATE_NOOP("eacoin-core", "Your entries added successfully."),
+QT_TRANSLATE_NOOP("eacoin-core", "Your transaction was accepted into the pool!"),
 QT_TRANSLATE_NOOP("eacoin-core", "Zapping all transactions from wallet..."),
 QT_TRANSLATE_NOOP("eacoin-core", "ZeroMQ notification options:"),
+QT_TRANSLATE_NOOP("eacoin-core", "no mixing available."),
+QT_TRANSLATE_NOOP("eacoin-core", "see debug.log for details."),
 QT_TRANSLATE_NOOP("eacoin-core", "wallet.dat corrupt, salvage failed"),
 };

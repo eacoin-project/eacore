@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The EACoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -242,11 +243,11 @@ UniValue stop(const UniValue& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop EACoin server.");
+            "\nStop EACoin Core server.");
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
-    return "EACoin server stopping";
+    return "EACoin Core server stopping";
 }
 
 /**
@@ -257,6 +258,7 @@ static const CRPCCommand vRPCCommands[] =
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
     { "control",            "getinfo",                &getinfo,                true  }, /* uses wallet if enabled */
+    { "control",            "debug",                  &debug,                  true  },
     { "control",            "help",                   &help,                   true  },
     { "control",            "stop",                   &stop,                   true  },
 
@@ -278,10 +280,10 @@ static const CRPCCommand vRPCCommands[] =
     { "blockchain",         "getbestblockhash",       &getbestblockhash,       true  },
     { "blockchain",         "getblockcount",          &getblockcount,          true  },
     { "blockchain",         "getblock",               &getblock,               true  },
-    { "blockchain",         "getblockdeltas",         &getblockdeltas,         false },
     { "blockchain",         "getblockhashes",         &getblockhashes,         true  },
     { "blockchain",         "getblockhash",           &getblockhash,           true  },
     { "blockchain",         "getblockheader",         &getblockheader,         true  },
+    { "blockchain",         "getblockheaders",        &getblockheaders,        true  },
     { "blockchain",         "getchaintips",           &getchaintips,           true  },
     { "blockchain",         "getdifficulty",          &getdifficulty,          true  },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true  },
@@ -340,8 +342,23 @@ static const CRPCCommand vRPCCommands[] =
     { "hidden",             "resendwallettransactions", &resendwallettransactions, true},
 #endif
 
+    /* EACoin features */
+    { "eacoin",               "masternode",             &masternode,             true  },
+    { "eacoin",               "masternodelist",         &masternodelist,         true  },
+    { "eacoin",               "masternodebroadcast",    &masternodebroadcast,    true  },
+    { "eacoin",               "gobject",                &gobject,                true  },
+    { "eacoin",               "getgovernanceinfo",      &getgovernanceinfo,      true  },
+    { "eacoin",               "getsuperblockbudget",    &getsuperblockbudget,    true  },
+    { "eacoin",               "voteraw",                &voteraw,                true  },
+    { "eacoin",               "mnsync",                 &mnsync,                 true  },
+    { "eacoin",               "spork",                  &spork,                  true  },
+    { "eacoin",               "getpoolinfo",            &getpoolinfo,            true  },
 #ifdef ENABLE_WALLET
+    { "eacoin",               "privatesend",            &privatesend,            false },
+
     /* Wallet */
+    { "wallet",             "keepass",                &keepass,                true },
+    { "wallet",             "instantsendtoaddress",   &instantsendtoaddress,   false },
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true  },
     { "wallet",             "backupwallet",           &backupwallet,           true  },
     { "wallet",             "dumpprivkey",            &dumpprivkey,            true  },
@@ -361,6 +378,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "getwalletinfo",          &getwalletinfo,          false },
     { "wallet",             "importprivkey",          &importprivkey,          true  },
     { "wallet",             "importwallet",           &importwallet,           true  },
+    { "wallet",             "importelectrumwallet",   &importelectrumwallet,   true  },
     { "wallet",             "importaddress",          &importaddress,          true  },
     { "wallet",             "importpubkey",           &importpubkey,           true  },
     { "wallet",             "keypoolrefill",          &keypoolrefill,          true  },
@@ -546,6 +564,17 @@ UniValue CRPCTable::execute(const std::string &strMethod, const UniValue &params
     g_rpcSignals.PostCommand(*pcmd);
 }
 
+std::vector<std::string> CRPCTable::listCommands() const
+{
+    std::vector<std::string> commandList;
+    typedef std::map<std::string, const CRPCCommand*> commandMap;
+
+    std::transform( mapCommands.begin(), mapCommands.end(),
+                   std::back_inserter(commandList),
+                   boost::bind(&commandMap::value_type::first,_1) );
+    return commandList;
+}
+
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
     return "> eacoin-cli " + methodname + " " + args + "\n";
@@ -554,7 +583,7 @@ std::string HelpExampleCli(const std::string& methodname, const std::string& arg
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:9998/\n";
 }
 
 void RPCRegisterTimerInterface(RPCTimerInterface *iface)

@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_COMPAT_H
-#define EACOIN_COMPAT_H
+#ifndef BITCOIN_COMPAT_H
+#define BITCOIN_COMPAT_H
 
 #if defined(HAVE_CONFIG_H)
 #include "config/eacoin-config.h"
@@ -101,4 +101,4 @@ bool static inline IsSelectableSocket(SOCKET s) {
 #endif
 }
 
-#endif // EACOIN_COMPAT_H
+#endif // BITCOIN_COMPAT_H

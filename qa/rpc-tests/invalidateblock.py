@@ -7,10 +7,10 @@
 # Test InvalidateBlock code
 #
 
-from test_framework.test_framework import EACoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class InvalidateTest(EACoinTestFramework):
+class InvalidateTest(BitcoinTestFramework):
     
         
     def setup_chain(self):

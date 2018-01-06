@@ -1,4 +1,5 @@
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2014-2017 The EACoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,8 +53,7 @@ namespace Checkpoints {
             fWorkAfter = nExpensiveAfter*fSigcheckVerificationFactor;
         }
 
-        // return fWorkBefore / (fWorkBefore + fWorkAfter);
-        return 1.0;
+        return fWorkBefore / (fWorkBefore + fWorkAfter);
     }
 
     int GetTotalBlocksEstimate(const CCheckpointData& data)
@@ -63,8 +63,7 @@ namespace Checkpoints {
         if (checkpoints.empty())
             return 0;
 
-        // return checkpoints.rbegin()->first;
-        return 0;
+        return checkpoints.rbegin()->first;
     }
 
     CBlockIndex* GetLastCheckpoint(const CCheckpointData& data)
@@ -76,8 +75,7 @@ namespace Checkpoints {
             const uint256& hash = i.second;
             BlockMap::const_iterator t = mapBlockIndex.find(hash);
             if (t != mapBlockIndex.end())
-                // return t->second;
-                return NULL;
+                return t->second;
         }
         return NULL;
     }

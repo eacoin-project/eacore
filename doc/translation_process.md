@@ -1,7 +1,7 @@
 Translations
 ============
 
-The EACoin-Core project has been designed to support multiple localisations. This makes adding new phrases, and completely new languages easily achievable. For managing all application translations, EACoin-Core makes use of the Transifex online translation management tool.
+The EACoin Core project has been designed to support multiple localisations. This makes adding new phrases, and completely new languages easily achievable. For managing all application translations, EACoin Core makes use of the Transifex online translation management tool.
 
 ### Helping to translate (using Transifex)
 Transifex is setup to monitor the Github repo for updates, and when code containing new translations is found, Transifex will process any changes. It may take several hours after a pull-request has been merged, to appear in the Transifex web interface.
@@ -39,6 +39,7 @@ To create the pull-request, use the following commands:
 git add src/qt/eacoinstrings.cpp src/qt/locale/eacoin_en.ts
 git commit
 ```
+
 
 ### Creating a Transifex account
 Visit the [Transifex Signup](https://www.transifex.com/signup/) page to create an account. Take note of your username and password, as they will be required to configure the command-line tool.
@@ -94,7 +95,7 @@ When new plurals are added to the source file, it's important to do the followin
 7. Save the source file
 
 ### Translating a new language
-To create a new language template, you will need to edit the languages manifest file `src/qt/eacoin.qrc` and add a new entry. Below is an example of the english language entry.
+To create a new language template, you will need to edit the languages manifest file `src/qt/bitcoin.qrc` and add a new entry. Below is an example of the english language entry.
 
 ```xml
 <qresource prefix="/translations">
@@ -106,6 +107,4 @@ To create a new language template, you will need to edit the languages manifest 
 **Note:** that the language translation file **must end in `.qm`** (the compiled extension), and not `.ts`.
 
 ### Questions and general assistance
-The EACoin-Core translation maintainers include *tcatm, seone, Diapolo, wumpus and luke-jr*. You can find them, and others, in the Freenode IRC chatroom - `irc.freenode.net #eacoin-core-dev`.
-
-If you are a translator, you should also subscribe to the mailing list, https://groups.google.com/forum/#!forum/eacoin-translators. Announcements will be posted during application pre-releases to notify translators to check for updates.
+Check official forum at [https://eacointalk.org/forums/eacoin-worldwide-collaboration.88/](https://eacointalk.org/forums/eacoin-worldwide-collaboration.88/).

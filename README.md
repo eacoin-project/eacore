@@ -1,8 +1,6 @@
 EACoin Core integration/staging tree
 =====================================
 
-[![Build Status](#)](#)
-
 https://eacoin.io
 
 What is EA Coin?

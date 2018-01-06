@@ -5,7 +5,7 @@
 
 # Base class for RPC testing
 
-# Add python-eacoinrpc to module search path:
+# Add python-bitcoinrpc to module search path:
 import os
 import sys
 
@@ -21,21 +21,21 @@ from .util import (
     sync_blocks,
     sync_mempools,
     stop_nodes,
-    wait_eacoinds,
+    wait_bitcoinds,
     enable_coverage,
     check_json_precision,
     initialize_chain_clean,
 )
-from authproxy import AuthServiceProxy, JSONRPCException
+from .authproxy import AuthServiceProxy, JSONRPCException
 
 
-class EACoinTestFramework(object):
+class BitcoinTestFramework(object):
 
     # These may be over-ridden by subclasses:
     def run_test(self):
         for node in self.nodes:
             assert_equal(node.getblockcount(), 200)
-            assert_equal(node.getbalance(), 25*50)
+            assert_equal(node.getbalance(), 25*500)
 
     def add_options(self, parser):
         pass
@@ -72,7 +72,7 @@ class EACoinTestFramework(object):
         """
         assert not self.is_network_split
         stop_nodes(self.nodes)
-        wait_eacoinds()
+        wait_bitcoinds()
         self.setup_network(True)
 
     def sync_all(self):
@@ -91,7 +91,7 @@ class EACoinTestFramework(object):
         """
         assert self.is_network_split
         stop_nodes(self.nodes)
-        wait_eacoinds()
+        wait_bitcoinds()
         self.setup_network(False)
 
     def main(self):
@@ -140,16 +140,16 @@ class EACoinTestFramework(object):
             print("JSONRPC error: "+e.error['message'])
             traceback.print_tb(sys.exc_info()[2])
         except AssertionError as e:
-            print("Assertion failed: "+e.message)
+            print("Assertion failed: "+ str(e))
             traceback.print_tb(sys.exc_info()[2])
         except Exception as e:
-            print("Unexpected exception caught during testing: "+str(e))
+            print("Unexpected exception caught during testing: " + repr(e))
             traceback.print_tb(sys.exc_info()[2])
 
         if not self.options.noshutdown:
             print("Stopping nodes")
             stop_nodes(self.nodes)
-            wait_eacoinds()
+            wait_bitcoinds()
         else:
             print("Note: eacoinds were not stopped and may still be running")
 
@@ -165,13 +165,13 @@ class EACoinTestFramework(object):
             sys.exit(1)
 
 
-# Test framework for doing p2p comparison testing, which sets up some eacoind
+# Test framework for doing p2p comparison testing, which sets up some bitcoind
 # binaries:
 # 1 binary: test binary
 # 2 binaries: 1 test binary, 1 ref binary
 # n>2 binaries: 1 test binary, n-1 ref binaries
 
-class ComparisonTestFramework(EACoinTestFramework):
+class ComparisonTestFramework(BitcoinTestFramework):
 
     # Can override the num_nodes variable to indicate how many nodes to run.
     def __init__(self):
@@ -180,10 +180,10 @@ class ComparisonTestFramework(EACoinTestFramework):
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
                           default=os.getenv("EACOIND", "eacoind"),
-                          help="eacoind binary to test")
+                          help="bitcoind binary to test")
         parser.add_option("--refbinary", dest="refbinary",
                           default=os.getenv("EACOIND", "eacoind"),
-                          help="eacoind binary to use for reference nodes (if any)")
+                          help="bitcoind binary to use for reference nodes (if any)")
 
     def setup_chain(self):
         print "Initializing test directory "+self.options.tmpdir

@@ -1,4 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The EACoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,13 +7,14 @@
 #include "config/eacoin-config.h"
 #endif
 
-#include "eacoingui.h"
+#include "bitcoingui.h"
 
 #include "chainparams.h"
 #include "clientmodel.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "intro.h"
+#include "net.h"
 #include "networkstyle.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
@@ -24,6 +26,7 @@
 #include "paymentserver.h"
 #include "walletmodel.h"
 #endif
+#include "masternodeconfig.h"
 
 #include "init.h"
 #include "rpcserver.h"
@@ -45,6 +48,7 @@
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
+#include <QProcess>
 #include <QSettings>
 #include <QThread>
 #include <QTimer>
@@ -138,11 +142,11 @@ static void initTranslations(QTranslator &qtTranslatorBase, QTranslator &qtTrans
     if (qtTranslator.load("qt_" + lang_territory, QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
         QApplication::installTranslator(&qtTranslator);
 
-    // Load e.g. eacoin_de.qm (shortcut "de" needs to be defined in eacoin.qrc)
+    // Load e.g. bitcoin_de.qm (shortcut "de" needs to be defined in eacoin.qrc)
     if (translatorBase.load(lang, ":/translations/"))
         QApplication::installTranslator(&translatorBase);
 
-    // Load e.g. eacoin_de_DE.qm (shortcut "de_DE" needs to be defined in eacoin.qrc)
+    // Load e.g. bitcoin_de_DE.qm (shortcut "de_DE" needs to be defined in eacoin.qrc)
     if (translator.load(lang_territory, ":/translations/"))
         QApplication::installTranslator(&translator);
 }
@@ -166,15 +170,16 @@ void DebugMessageHandler(QtMsgType type, const QMessageLogContext& context, cons
 /** Class encapsulating EACoin Core startup and shutdown.
  * Allows running startup and shutdown in a different thread from the UI thread.
  */
-class EACoinCore: public QObject
+class BitcoinCore: public QObject
 {
     Q_OBJECT
 public:
-    explicit EACoinCore();
+    explicit BitcoinCore();
 
 public Q_SLOTS:
     void initialize();
     void shutdown();
+    void restart(QStringList args);
 
 Q_SIGNALS:
     void initializeResult(int retval);
@@ -185,17 +190,20 @@ private:
     boost::thread_group threadGroup;
     CScheduler scheduler;
 
+    /// Flag indicating a restart
+    bool execute_restart;
+
     /// Pass fatal exception message to UI thread
     void handleRunawayException(const std::exception *e);
 };
 
 /** Main EACoin application object */
-class EACoinApplication: public QApplication
+class BitcoinApplication: public QApplication
 {
     Q_OBJECT
 public:
-    explicit EACoinApplication(int &argc, char **argv);
-    ~EACoinApplication();
+    explicit BitcoinApplication(int &argc, char **argv);
+    ~BitcoinApplication();
 
 #ifdef ENABLE_WALLET
     /// Create payment server
@@ -218,7 +226,7 @@ public:
     /// Get process return value
     int getReturnValue() { return returnValue; }
 
-    /// Get window identifier of QMainWindow (EACoinGUI)
+    /// Get window identifier of QMainWindow (BitcoinGUI)
     WId getMainWinId() const;
 
 public Q_SLOTS:
@@ -229,6 +237,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void requestedInitialize();
+    void requestedRestart(QStringList args);
     void requestedShutdown();
     void stopThread();
     void splashFinished(QWidget *window);
@@ -237,7 +246,7 @@ private:
     QThread *coreThread;
     OptionsModel *optionsModel;
     ClientModel *clientModel;
-    EACoinGUI *window;
+    BitcoinGUI *window;
     QTimer *pollShutdownTimer;
 #ifdef ENABLE_WALLET
     PaymentServer* paymentServer;
@@ -251,19 +260,21 @@ private:
 
 #include "eacoin.moc"
 
-EACoinCore::EACoinCore():
+BitcoinCore::BitcoinCore():
     QObject()
 {
 }
 
-void EACoinCore::handleRunawayException(const std::exception *e)
+void BitcoinCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
     Q_EMIT runawayException(QString::fromStdString(strMiscWarning));
 }
 
-void EACoinCore::initialize()
+void BitcoinCore::initialize()
 {
+    execute_restart = true;
+
     try
     {
         qDebug() << __func__ << ": Running AppInit2 in thread";
@@ -276,7 +287,31 @@ void EACoinCore::initialize()
     }
 }
 
-void EACoinCore::shutdown()
+void BitcoinCore::restart(QStringList args)
+{
+    if(execute_restart) { // Only restart 1x, no matter how often a user clicks on a restart-button
+        execute_restart = false;
+        try
+        {
+            qDebug() << __func__ << ": Running Restart in thread";
+            threadGroup.interrupt_all();
+            threadGroup.join_all();
+            PrepareShutdown();
+            qDebug() << __func__ << ": Shutdown finished";
+            Q_EMIT shutdownResult(1);
+            CExplicitNetCleanup::callCleanup();
+            QProcess::startDetached(QApplication::applicationFilePath(), args);
+            qDebug() << __func__ << ": Restart initiated...";
+            QApplication::quit();
+        } catch (std::exception& e) {
+            handleRunawayException(&e);
+        } catch (...) {
+            handleRunawayException(NULL);
+        }
+    }
+}
+
+void BitcoinCore::shutdown()
 {
     try
     {
@@ -293,7 +328,7 @@ void EACoinCore::shutdown()
     }
 }
 
-EACoinApplication::EACoinApplication(int &argc, char **argv):
+BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     QApplication(argc, argv),
     coreThread(0),
     optionsModel(0),
@@ -309,17 +344,17 @@ EACoinApplication::EACoinApplication(int &argc, char **argv):
     setQuitOnLastWindowClosed(false);
 
     // UI per-platform customization
-    // This must be done inside the EACoinApplication constructor, or after it, because
+    // This must be done inside the BitcoinApplication constructor, or after it, because
     // PlatformStyle::instantiate requires a QApplication
     std::string platformName;
-    platformName = GetArg("-uiplatform", EACoinGUI::DEFAULT_UIPLATFORM);
+    platformName = GetArg("-uiplatform", BitcoinGUI::DEFAULT_UIPLATFORM);
     platformStyle = PlatformStyle::instantiate(QString::fromStdString(platformName));
     if (!platformStyle) // Fall back to "other" if specified name not found
         platformStyle = PlatformStyle::instantiate("other");
     assert(platformStyle);
 }
 
-EACoinApplication::~EACoinApplication()
+BitcoinApplication::~BitcoinApplication()
 {
     if(coreThread)
     {
@@ -335,6 +370,12 @@ EACoinApplication::~EACoinApplication()
     delete paymentServer;
     paymentServer = 0;
 #endif
+    // Delete Qt-settings if user clicked on "Reset Options"
+    QSettings settings;
+    if(optionsModel && optionsModel->resetSettings){
+        settings.clear();
+        settings.sync();
+    }
     delete optionsModel;
     optionsModel = 0;
     delete platformStyle;
@@ -342,27 +383,27 @@ EACoinApplication::~EACoinApplication()
 }
 
 #ifdef ENABLE_WALLET
-void EACoinApplication::createPaymentServer()
+void BitcoinApplication::createPaymentServer()
 {
     paymentServer = new PaymentServer(this);
 }
 #endif
 
-void EACoinApplication::createOptionsModel(bool resetSettings)
+void BitcoinApplication::createOptionsModel(bool resetSettings)
 {
     optionsModel = new OptionsModel(NULL, resetSettings);
 }
 
-void EACoinApplication::createWindow(const NetworkStyle *networkStyle)
+void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new EACoinGUI(platformStyle, networkStyle, 0);
+    window = new BitcoinGUI(platformStyle, networkStyle, 0);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
     pollShutdownTimer->start(200);
 }
 
-void EACoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
+void BitcoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
 {
     SplashScreen *splash = new SplashScreen(0, networkStyle);
     // We don't hold a direct pointer to the splash screen after creation, so use
@@ -370,14 +411,15 @@ void EACoinApplication::createSplashScreen(const NetworkStyle *networkStyle)
     splash->setAttribute(Qt::WA_DeleteOnClose);
     splash->show();
     connect(this, SIGNAL(splashFinished(QWidget*)), splash, SLOT(slotFinish(QWidget*)));
+    connect(this, SIGNAL(requestedShutdown()), splash, SLOT(close()));
 }
 
-void EACoinApplication::startThread()
+void BitcoinApplication::startThread()
 {
     if(coreThread)
         return;
     coreThread = new QThread(this);
-    EACoinCore *executor = new EACoinCore();
+    BitcoinCore *executor = new BitcoinCore();
     executor->moveToThread(coreThread);
 
     /*  communication to and from thread */
@@ -386,6 +428,7 @@ void EACoinApplication::startThread()
     connect(executor, SIGNAL(runawayException(QString)), this, SLOT(handleRunawayException(QString)));
     connect(this, SIGNAL(requestedInitialize()), executor, SLOT(initialize()));
     connect(this, SIGNAL(requestedShutdown()), executor, SLOT(shutdown()));
+    connect(window, SIGNAL(requestedRestart(QStringList)), executor, SLOT(restart(QStringList)));
     /*  make sure executor object is deleted in its own thread */
     connect(this, SIGNAL(stopThread()), executor, SLOT(deleteLater()));
     connect(this, SIGNAL(stopThread()), coreThread, SLOT(quit()));
@@ -393,20 +436,20 @@ void EACoinApplication::startThread()
     coreThread->start();
 }
 
-void EACoinApplication::parameterSetup()
+void BitcoinApplication::parameterSetup()
 {
     InitLogging();
     InitParameterInteraction();
 }
 
-void EACoinApplication::requestInitialize()
+void BitcoinApplication::requestInitialize()
 {
     qDebug() << __func__ << ": Requesting initialize";
     startThread();
     Q_EMIT requestedInitialize();
 }
 
-void EACoinApplication::requestShutdown()
+void BitcoinApplication::requestShutdown()
 {
     qDebug() << __func__ << ": Requesting shutdown";
     startThread();
@@ -429,7 +472,7 @@ void EACoinApplication::requestShutdown()
     Q_EMIT requestedShutdown();
 }
 
-void EACoinApplication::initializeResult(int retval)
+void BitcoinApplication::initializeResult(int retval)
 {
     qDebug() << __func__ << ": Initialization result: " << retval;
     // Set exit result: 0 if successful, 1 if failure
@@ -451,8 +494,8 @@ void EACoinApplication::initializeResult(int retval)
         {
             walletModel = new WalletModel(platformStyle, pwalletMain, optionsModel);
 
-            window->addWallet(EACoinGUI::DEFAULT_WALLET, walletModel);
-            window->setCurrentWallet(EACoinGUI::DEFAULT_WALLET);
+            window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
+            window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);
 
             connect(walletModel, SIGNAL(coinsSent(CWallet*,SendCoinsRecipient,QByteArray)),
                              paymentServer, SLOT(fetchPaymentACK(CWallet*,const SendCoinsRecipient&,QByteArray)));
@@ -486,19 +529,19 @@ void EACoinApplication::initializeResult(int retval)
     }
 }
 
-void EACoinApplication::shutdownResult(int retval)
+void BitcoinApplication::shutdownResult(int retval)
 {
     qDebug() << __func__ << ": Shutdown result: " << retval;
     quit(); // Exit main loop after shutdown finished
 }
 
-void EACoinApplication::handleRunawayException(const QString &message)
+void BitcoinApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(0, "Runaway exception", EACoinGUI::tr("A fatal error occurred. EACoin can no longer continue safely and will quit.") + QString("\n\n") + message);
-    ::exit(1);
+    QMessageBox::critical(0, "Runaway exception", BitcoinGUI::tr("A fatal error occurred. EACoin Core can no longer continue safely and will quit.") + QString("\n\n") + message);
+    ::exit(EXIT_FAILURE);
 }
 
-WId EACoinApplication::getMainWinId() const
+WId BitcoinApplication::getMainWinId() const
 {
     if (!window)
         return 0;
@@ -506,7 +549,7 @@ WId EACoinApplication::getMainWinId() const
     return window->winId();
 }
 
-#ifndef EACOIN_QT_TEST
+#ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
     SetupEnvironment();
@@ -527,7 +570,7 @@ int main(int argc, char *argv[])
     Q_INIT_RESOURCE(eacoin);
     Q_INIT_RESOURCE(eacoin_locale);
 
-    EACoinApplication app(argc, argv);
+    BitcoinApplication app(argc, argv);
 #if QT_VERSION > 0x050100
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
@@ -567,9 +610,9 @@ int main(int argc, char *argv[])
     // but before showing splash screen.
     if (mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help") || mapArgs.count("-version"))
     {
-        HelpMessageDialog help(NULL, mapArgs.count("-version"));
+        HelpMessageDialog help(NULL, mapArgs.count("-version") ? HelpMessageDialog::about : HelpMessageDialog::cmdline);
         help.showOrPrint();
-        return 1;
+        return EXIT_SUCCESS;
     }
 
     /// 5. Now that settings and translations are available, ask user for data directory
@@ -582,14 +625,14 @@ int main(int argc, char *argv[])
     {
         QMessageBox::critical(0, QObject::tr("EACoin Core"),
                               QObject::tr("Error: Specified data directory \"%1\" does not exist.").arg(QString::fromStdString(mapArgs["-datadir"])));
-        return 1;
+        return EXIT_FAILURE;
     }
     try {
         ReadConfigFile(mapArgs, mapMultiArgs);
     } catch (const std::exception& e) {
         QMessageBox::critical(0, QObject::tr("EACoin Core"),
                               QObject::tr("Error: Cannot parse configuration file: %1. Only use key=value syntax.").arg(e.what()));
-        return false;
+        return EXIT_FAILURE;
     }
 
     /// 7. Determine network (and switch to network specific options)
@@ -603,7 +646,7 @@ int main(int argc, char *argv[])
         SelectParams(ChainNameFromCommandLine());
     } catch(std::exception &e) {
         QMessageBox::critical(0, QObject::tr("EACoin Core"), QObject::tr("Error: %1").arg(e.what()));
-        return 1;
+        return EXIT_FAILURE;
     }
 #ifdef ENABLE_WALLET
     // Parse URIs on command line -- this can affect Params()
@@ -613,11 +656,19 @@ int main(int argc, char *argv[])
     QScopedPointer<const NetworkStyle> networkStyle(NetworkStyle::instantiate(QString::fromStdString(Params().NetworkIDString())));
     assert(!networkStyle.isNull());
     // Allow for separate UI settings for testnets
-    QApplication::setApplicationName(networkStyle->getAppName());
+    // QApplication::setApplicationName(networkStyle->getAppName()); // moved to NetworkStyle::NetworkStyle
     // Re-initialize translations after changing application name (language in network-specific settings can be different)
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
 #ifdef ENABLE_WALLET
+    /// 7a. parse masternode.conf
+    std::string strErr;
+    if(!masternodeConfig.read(strErr)) {
+        QMessageBox::critical(0, QObject::tr("EACoin Core"),
+                              QObject::tr("Error reading masternode configuration file: %1").arg(strErr.c_str()));
+        return EXIT_FAILURE;
+    }
+
     /// 8. URI IPC sending
     // - Do this early as we don't want to bother initializing if we are just calling IPC
     // - Do this *after* setting up the data directory, as the data directory hash is used in the name
@@ -625,7 +676,7 @@ int main(int argc, char *argv[])
     // - Do this after creating app and setting up translations, so errors are
     // translated properly.
     if (PaymentServer::ipcSendCommandLine())
-        exit(0);
+        exit(EXIT_SUCCESS);
 
     // Start up the payment server early, too, so impatient users that click on
     // eacoin: links repeatedly have their payment requests routed to this process:
@@ -676,4 +727,4 @@ int main(int argc, char *argv[])
     }
     return app.getReturnValue();
 }
-#endif // EACOIN_QT_TEST
+#endif // BITCOIN_QT_TEST

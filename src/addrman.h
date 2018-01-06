@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_ADDRMAN_H
-#define EACOIN_ADDRMAN_H
+#ifndef BITCOIN_ADDRMAN_H
+#define BITCOIN_ADDRMAN_H
 
 #include "netbase.h"
 #include "protocol.h"
@@ -577,4 +577,4 @@ public:
 
 };
 
-#endif // EACOIN_ADDRMAN_H
+#endif // BITCOIN_ADDRMAN_H

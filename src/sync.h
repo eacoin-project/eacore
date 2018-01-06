@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_SYNC_H
-#define EACOIN_SYNC_H
+#ifndef BITCOIN_SYNC_H
+#define BITCOIN_SYNC_H
 
 #include "threadsafety.h"
 
@@ -14,11 +14,11 @@
 #include <boost/thread/recursive_mutex.hpp>
 
 
-////////////////////////////////////////////////
-//                                            //
+/////////////////////////////////////////////////
+//                                             //
 // THE SIMPLE DEFINITION, EXCLUDING DEBUG CODE //
-//                                            //
-////////////////////////////////////////////////
+//                                             //
+/////////////////////////////////////////////////
 
 /*
 CCriticalSection mutex;
@@ -277,4 +277,4 @@ public:
     }
 };
 
-#endif // EACOIN_SYNC_H
+#endif // BITCOIN_SYNC_H

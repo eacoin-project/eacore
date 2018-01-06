@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_TXMEMPOOL_H
-#define EACOIN_TXMEMPOOL_H
+#ifndef BITCOIN_TXMEMPOOL_H
+#define BITCOIN_TXMEMPOOL_H
 
 #include <list>
 #include <set>
@@ -34,6 +34,7 @@ inline bool AllowFree(double dPriority)
     // need a fee.
     return dPriority > AllowFreeThreshold();
 }
+
 
 /** Fake height value used in CCoins to signify they are only in the memory pool (since 0.8) */
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
@@ -657,4 +658,4 @@ struct TxCoinAgePriorityCompare
     }
 };
 
-#endif // EACOIN_TXMEMPOOL_H
+#endif // BITCOIN_TXMEMPOOL_H

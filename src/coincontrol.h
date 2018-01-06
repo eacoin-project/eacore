@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_COINCONTROL_H
-#define EACOIN_COINCONTROL_H
+#ifndef BITCOIN_COINCONTROL_H
+#define BITCOIN_COINCONTROL_H
 
 #include "primitives/transaction.h"
 
@@ -12,6 +12,8 @@ class CCoinControl
 {
 public:
     CTxDestination destChange;
+    bool fUsePrivateSend;
+    bool fUseInstantSend;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
     //! Includes watch only addresses which match the ISMINE_WATCH_SOLVABLE criteria
@@ -30,6 +32,8 @@ public:
         fAllowOtherInputs = false;
         fAllowWatchOnly = false;
         setSelected.clear();
+        fUseInstantSend = false;
+        fUsePrivateSend = true;
         nMinimumTotalFee = 0;
     }
 
@@ -68,4 +72,4 @@ private:
     std::set<COutPoint> setSelected;
 };
 
-#endif // EACOIN_COINCONTROL_H
+#endif // BITCOIN_COINCONTROL_H

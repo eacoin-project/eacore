@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_QT_ASKPASSPHRASEDIALOG_H
-#define EACOIN_QT_ASKPASSPHRASEDIALOG_H
+#ifndef BITCOIN_QT_ASKPASSPHRASEDIALOG_H
+#define BITCOIN_QT_ASKPASSPHRASEDIALOG_H
 
 #include <QDialog>
 
@@ -22,6 +22,7 @@ class AskPassphraseDialog : public QDialog
 public:
     enum Mode {
         Encrypt,    /**< Ask passphrase twice and encrypt */
+        UnlockMixing,     /**< Ask passphrase and unlock only for mixing */
         Unlock,     /**< Ask passphrase and unlock */
         ChangePass, /**< Ask old passphrase + new passphrase twice */
         Decrypt     /**< Ask passphrase and decrypt wallet */
@@ -48,4 +49,4 @@ protected:
     bool eventFilter(QObject *object, QEvent *event);
 };
 
-#endif // EACOIN_QT_ASKPASSPHRASEDIALOG_H
+#endif // BITCOIN_QT_ASKPASSPHRASEDIALOG_H

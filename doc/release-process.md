@@ -1,8 +1,7 @@
 Release Process
 ====================
 
-* Update translations (ping wumpus, Diapolo or tcatm on IRC) see [translation_process.md](https://github.com/eacoin/eacoin/blob/master/doc/translation_process.md#syncing-with-transifex)
-* Update [bips.md](bips.md) to account for changes since the last release.
+* Update translations, see [translation_process.md](https://github.com/eacoinpay/eacoin/blob/master/doc/translation_process.md#syncing-with-transifex)
 * Update hardcoded [seeds](/contrib/seeds)
 
 * * *
@@ -11,12 +10,12 @@ Release Process
 Check out the source code in the following directory hierarchy.
 
 	cd /path/to/your/toplevel/build
-	git clone https://github.com/eacoin/gitian.sigs.git
-	git clone https://github.com/eacoin/eacoin-detached-sigs.git
+	git clone https://github.com/eacoinpay/gitian.sigs.git
+	git clone https://github.com/eacoinpay/eacoin-detached-sigs.git
 	git clone https://github.com/devrandom/gitian-builder.git
-	git clone https://github.com/eacoin/eacoin.git
+	git clone https://github.com/eacoinpay/eacoin.git
 
-###EACoin maintainers/release engineers, update (commit) version in sources
+###EACoin Core maintainers/release engineers, update (commit) version in sources
 
 	pushd ./eacoin
 	contrib/verifysfbinaries/verify.sh
@@ -62,7 +61,7 @@ Check out the source code in the following directory hierarchy.
 ###Fetch and create inputs: (first time, or when dependency versions change)
 
 	mkdir -p inputs
-	wget -P inputs https://eacoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
+	wget -P inputs https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
 	wget -P inputs http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
 
  Register and download the Apple SDK: see [OS X readme](README_osx.txt) for details.
@@ -91,17 +90,18 @@ The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
 	./bin/gbuild --commit eacoin=v${VERSION} ../eacoin/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../eacoin/contrib/gitian-descriptors/gitian-linux.yml
-    mv build/out/eacoin-*.tar.gz build/out/src/eacoin-*.tar.gz ../
+	mv build/out/eacoin-*.tar.gz build/out/src/eacoin-*.tar.gz ../
 
 	./bin/gbuild --commit eacoin=v${VERSION} ../eacoin/contrib/gitian-descriptors/gitian-win.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../eacoin/contrib/gitian-descriptors/gitian-win.yml
-    mv build/out/eacoin-*-win-unsigned.tar.gz inputs/eacoin-win-unsigned.tar.gz
-    mv build/out/eacoin-*.zip build/out/eacoin-*.exe ../
+	mv build/out/eacoin-*-win-unsigned.tar.gz inputs/eacoin-win-unsigned.tar.gz
+	mv build/out/eacoin-*.zip build/out/eacoin-*.exe ../
 
 	./bin/gbuild --commit eacoin=v${VERSION} ../eacoin/contrib/gitian-descriptors/gitian-osx.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../eacoin/contrib/gitian-descriptors/gitian-osx.yml
-    mv build/out/eacoin-*-osx-unsigned.tar.gz inputs/eacoin-osx-unsigned.tar.gz
-    mv build/out/eacoin-*.tar.gz build/out/eacoin-*.dmg ../
+	mv build/out/eacoin-*-osx-unsigned.tar.gz inputs/eacoin-osx-unsigned.tar.gz
+	mv build/out/eacoin-*.tar.gz build/out/eacoin-*.dmg ../
+	popd
 
   Build output expected:
 
@@ -139,7 +139,7 @@ Commit your signature to gitian.sigs:
 
   Wait for Windows/OS X detached signatures:
 	Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
-	Detached signatures will then be committed to the [eacoin-detached-sigs](https://github.com/eacoin/eacoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
+	Detached signatures will then be committed to the [eacoin-detached-sigs](https://github.com/eacoinpay/eacoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
   Create (and optionally verify) the signed OS X binary:
 
@@ -183,34 +183,20 @@ rm SHA256SUMS
 Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spurious/nonsensical entry.
 
 - Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the eacoin.org server
-  into `/var/www/bin/eacoin-core-${VERSION}`
 
-- Update eacoin.org version
-
-  - First, check to see if the EACoin.org maintainers have prepared a
-    release: https://github.com/eacoin-dot-org/eacoin.org/labels/Releases
-
-      - If they have, it will have previously failed their Travis CI
-        checks because the final release files weren't uploaded.
-        Trigger a Travis CI rebuild---if it passes, merge.
-
-  - If they have not prepared a release, follow the EACoin.org release
-    instructions: https://github.com/eacoin-dot-org/eacoin.org#release-notes
-
-  - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
-    as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
+- Update eacoin.org
 
 - Announce the release:
 
-  - Release sticky on eacointalk: https://eacointalk.org/index.php?board=1.0
+  - Release on EACoin forum: https://www.eacoin.org/forum/topic/official-announcements.54/
 
   - EACoin-development mailing list
 
-  - Update title of #eacoin on Freenode IRC
+  - Update title of #eacoinpay on Freenode IRC
 
-  - Optionally reddit /r/EACoin, ... but this will usually sort out itself
+  - Optionally reddit /r/EACoinpay, ... but this will usually sort out itself
 
-- Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~eacoin/+archive/ubuntu/eacoin)
+- Notify flare so that he can start building [the PPAs](https://launchpad.net/~eacoin.org/+archive/ubuntu/eacoin)
 
 - Add release notes for the new version to the directory `doc/release-notes` in git master
 

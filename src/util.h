@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The EACoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,8 +8,8 @@
  * Server/client environment: argument handling, config file parsing,
  * logging, thread wrappers
  */
-#ifndef EACOIN_UTIL_H
-#define EACOIN_UTIL_H
+#ifndef BITCOIN_UTIL_H
+#define BITCOIN_UTIL_H
 
 #if defined(HAVE_CONFIG_H)
 #include "config/eacoin-config.h"
@@ -17,6 +18,7 @@
 #include "compat.h"
 #include "tinyformat.h"
 #include "utiltime.h"
+#include "amount.h"
 
 #include <exception>
 #include <map>
@@ -28,9 +30,27 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
 
-static const bool DEFAULT_LOGTIMEMICROS = false;
-static const bool DEFAULT_LOGIPS        = false;
-static const bool DEFAULT_LOGTIMESTAMPS = true;
+// Debugging macros
+
+// Uncomment the following line to enable debugging messages
+// or enable on a per file basis prior to inclusion of util.h
+//#define ENABLE_EACOIN_DEBUG
+#ifdef ENABLE_EACOIN_DEBUG
+#define DBG( x ) x
+#else
+#define DBG( x ) 
+#endif
+
+//EACoin only features
+
+extern bool fMasterNode;
+extern bool fLiteMode;
+extern int nWalletBackups;
+
+static const bool DEFAULT_LOGTIMEMICROS  = false;
+static const bool DEFAULT_LOGIPS         = false;
+static const bool DEFAULT_LOGTIMESTAMPS  = true;
+static const bool DEFAULT_LOGTHREADNAMES = false;
 
 /** Signals for translation. */
 class CTranslationInterface
@@ -49,12 +69,13 @@ extern bool fServer;
 extern std::string strMiscWarning;
 extern bool fLogTimestamps;
 extern bool fLogTimeMicros;
+extern bool fLogThreadNames;
 extern bool fLogIPs;
 extern volatile bool fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
-extern const char * const EACOIN_CONF_FILENAME;
-extern const char * const EACOIN_PID_FILENAME;
+extern const char * const BITCOIN_CONF_FILENAME;
+extern const char * const BITCOIN_PID_FILENAME;
 
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
@@ -123,8 +144,10 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
+const boost::filesystem::path &GetBackupsDir();
 void ClearDatadirCache();
 boost::filesystem::path GetConfigFile();
+boost::filesystem::path GetMasternodeConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
@@ -218,6 +241,7 @@ int GetNumCores();
 
 void SetThreadPriority(int nPriority);
 void RenameThread(const char* name);
+std::string GetThreadName();
 
 /**
  * .. and a wrapper that just calls func once
@@ -247,4 +271,4 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
-#endif // EACOIN_UTIL_H
+#endif // BITCOIN_UTIL_H

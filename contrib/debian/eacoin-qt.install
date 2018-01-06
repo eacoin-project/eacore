@@ -1,0 +1,6 @@
+usr/local/bin/eacoin-qt usr/bin
+share/pixmaps/eacoin32.xpm usr/share/pixmaps
+share/pixmaps/eacoin16.xpm usr/share/pixmaps
+share/pixmaps/eacoin128.png usr/share/pixmaps
+debian/eacoin-qt.desktop usr/share/applications
+debian/eacoin-qt.protocol usr/share/kde4/services/

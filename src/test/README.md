@@ -1,6 +1,6 @@
 # Notes
 The sources in this directory are unit test cases.  Boost includes a
-unit testing framework, and since eacoin already uses boost, it makes
+unit testing framework, and since EACoin Core already uses boost, it makes
 sense to simply use this framework rather than require developers to
 configure some other framework (we want as few impediments to creating
 unit tests as possible).
@@ -27,9 +27,9 @@ example, to run just the getarg_tests verbosely:
 
     test_eacoin --log_level=all --run_test=getarg_tests
 
-... or to run just the doubledash test:
+... or to run just the doubleeacoin test:
 
-    test_eacoin --run_test=getarg_tests/doubledash
+    test_eacoin --run_test=getarg_tests/doubleeacoin
 
 Run  test_eacoin --help   for the full list.
 

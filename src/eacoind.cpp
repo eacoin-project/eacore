@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The EACoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,6 +11,7 @@
 #include "noui.h"
 #include "scheduler.h"
 #include "util.h"
+#include "masternodeconfig.h"
 #include "httpserver.h"
 #include "httprpc.h"
 #include "rpcserver.h"
@@ -85,11 +87,11 @@ bool AppInit(int argc, char* argv[])
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  eacoind [options]                     " + _("Start EACoin Core Daemon") + "\n";
 
-            strUsage += "\n" + HelpMessage(HMM_EACOIND);
+            strUsage += "\n" + HelpMessage(HMM_BITCOIND);
         }
 
         fprintf(stdout, "%s", strUsage.c_str());
-        return false;
+        return true;
     }
 
     try
@@ -114,6 +116,13 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
+        // parse masternode.conf
+        std::string strErr;
+        if(!masternodeConfig.read(strErr)) {
+            fprintf(stderr,"Error reading masternode configuration file: %s\n", strErr.c_str());
+            return false;
+        }
+
         // Command-line RPC
         bool fCommandLine = false;
         for (int i = 1; i < argc; i++)
@@ -123,13 +132,13 @@ bool AppInit(int argc, char* argv[])
         if (fCommandLine)
         {
             fprintf(stderr, "Error: There is no RPC client functionality in eacoind anymore. Use the eacoin-cli utility instead.\n");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 #ifndef WIN32
         fDaemon = GetBoolArg("-daemon", false);
         if (fDaemon)
         {
-            fprintf(stdout, "EACoin server starting\n");
+            fprintf(stdout, "EACoin Core server starting\n");
 
             // Daemonize
             pid_t pid = fork();
@@ -183,5 +192,5 @@ int main(int argc, char* argv[])
     // Connect eacoind signal handlers
     noui_connect();
 
-    return (AppInit(argc, argv) ? 0 : 1);
+    return (AppInit(argc, argv) ? EXIT_SUCCESS : EXIT_FAILURE);
 }

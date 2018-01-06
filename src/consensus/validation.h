@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_CONSENSUS_VALIDATION_H
-#define EACOIN_CONSENSUS_VALIDATION_H
+#ifndef BITCOIN_CONSENSUS_VALIDATION_H
+#define BITCOIN_CONSENSUS_VALIDATION_H
 
 #include <string>
 
@@ -82,4 +82,4 @@ public:
     std::string GetDebugMessage() const { return strDebugMessage; }
 };
 
-#endif // EACOIN_CONSENSUS_VALIDATION_H
+#endif // BITCOIN_CONSENSUS_VALIDATION_H

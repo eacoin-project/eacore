@@ -8,13 +8,13 @@
 #
 
 import time
-from test_framework.test_framework import EACoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.mininode import *
 import binascii
 
-class SpentIndexTest(EACoinTestFramework):
+class SpentIndexTest(BitcoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -46,9 +46,9 @@ class SpentIndexTest(EACoinTestFramework):
         # Check that
         print "Testing spent index..."
 
-        privkey = "cSdkPxkAjA4HDr5VHgsebAPDEh9Gyub4HK8UJr2DFGGqKKy4K5sG"
-        address = "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW"
-        addressHash = "0b2f0a0c31bfe0406b0ccc1381fdbe311946dadc".decode("hex")
+        privkey = "cU4zhap7nPJAWeMFu4j6jLrfPmqakDAzy8zn8Fhb3oEevdm4e5Lc"
+        address = "yeMpGzMj3rhtnz48XsfpB8itPHhHtgxLc3"
+        addressHash = "C5E4FB9171C22409809A3E8047A29C83886E325D".decode("hex")
         scriptPubKey = CScript([OP_DUP, OP_HASH160, addressHash, OP_EQUALVERIFY, OP_CHECKSIG])
         unspent = self.nodes[0].listunspent()
         tx = CTransaction()
@@ -84,9 +84,9 @@ class SpentIndexTest(EACoinTestFramework):
         assert_equal(txVerbose2["vin"][0]["valueSat"], amount)
 
         # Check that verbose raw transaction includes address values and input values
-        privkey2 = "cSdkPxkAjA4HDr5VHgsebAPDEh9Gyub4HK8UJr2DFGGqKKy4K5sG"
-        address2 = "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW"
-        addressHash2 = "0b2f0a0c31bfe0406b0ccc1381fdbe311946dadc".decode("hex")
+        privkey2 = "cU4zhap7nPJAWeMFu4j6jLrfPmqakDAzy8zn8Fhb3oEevdm4e5Lc"
+        address2 = "yeMpGzMj3rhtnz48XsfpB8itPHhHtgxLc3"
+        addressHash2 = "C5E4FB9171C22409809A3E8047A29C83886E325D".decode("hex")
         scriptPubKey2 = CScript([OP_DUP, OP_HASH160, addressHash2, OP_EQUALVERIFY, OP_CHECKSIG])
         tx2 = CTransaction()
         tx2.vin = [CTxIn(COutPoint(int(txid, 16), 0))]
@@ -104,33 +104,13 @@ class SpentIndexTest(EACoinTestFramework):
         assert_equal(txVerbose3["vin"][0]["valueSat"], amount)
 
         # Check the database index
-        block_hash = self.nodes[0].generate(1)
+        self.nodes[0].generate(1)
         self.sync_all()
 
         txVerbose4 = self.nodes[3].getrawtransaction(txid2, 1)
         assert_equal(txVerbose4["vin"][0]["address"], address2)
         assert_equal(txVerbose4["vin"][0]["value"], Decimal(unspent[0]["amount"]))
         assert_equal(txVerbose4["vin"][0]["valueSat"], amount)
-
-
-        # Check block deltas
-        print "Testing getblockdeltas..."
-
-        block = self.nodes[3].getblockdeltas(block_hash[0])
-        assert_equal(len(block["deltas"]), 2)
-        assert_equal(block["deltas"][0]["index"], 0)
-        assert_equal(len(block["deltas"][0]["inputs"]), 0)
-        assert_equal(len(block["deltas"][0]["outputs"]), 0)
-        assert_equal(block["deltas"][1]["index"], 1)
-        assert_equal(block["deltas"][1]["txid"], txid2)
-        assert_equal(block["deltas"][1]["inputs"][0]["index"], 0)
-        assert_equal(block["deltas"][1]["inputs"][0]["address"], "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW")
-        assert_equal(block["deltas"][1]["inputs"][0]["satoshis"], amount * -1)
-        assert_equal(block["deltas"][1]["inputs"][0]["prevtxid"], txid)
-        assert_equal(block["deltas"][1]["inputs"][0]["prevout"], 0)
-        assert_equal(block["deltas"][1]["outputs"][0]["index"], 0)
-        assert_equal(block["deltas"][1]["outputs"][0]["address"], "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW")
-        assert_equal(block["deltas"][1]["outputs"][0]["satoshis"], amount)
 
         print "Passed\n"
 

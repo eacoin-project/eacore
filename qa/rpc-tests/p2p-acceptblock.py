@@ -5,7 +5,7 @@
 #
 
 from test_framework.mininode import *
-from test_framework.test_framework import EACoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 import time
 from test_framework.blocktools import create_block, create_coinbase
@@ -106,11 +106,11 @@ class TestNode(NodeConnCB):
         return received_pong
 
 
-class AcceptBlockTest(EACoinTestFramework):
+class AcceptBlockTest(BitcoinTestFramework):
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
                           default=os.getenv("EACOIND", "eacoind"),
-                          help="eacoind binary to test")
+                          help="bitcoind binary to test")
 
     def setup_chain(self):
         initialize_chain_clean(self.options.tmpdir, 2)
@@ -150,7 +150,7 @@ class AcceptBlockTest(EACoinTestFramework):
         # 2. Send one block that builds on each tip.
         # This should be accepted.
         blocks_h2 = []  # the height 2 blocks on each node's chain
-        block_time = time.time() + 1
+        block_time = int(time.time()) + 1
         for i in xrange(2):
             blocks_h2.append(create_block(tips[i], create_coinbase(2), block_time))
             blocks_h2[i].solve()

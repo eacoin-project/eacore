@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_INIT_H
-#define EACOIN_INIT_H
+#ifndef BITCOIN_INIT_H
+#define BITCOIN_INIT_H
 
 #include <string>
 
@@ -28,11 +28,12 @@ void InitLogging();
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction();
 bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler);
+void PrepareShutdown();
 
 /** The help message mode determines what help message to show */
 enum HelpMessageMode {
-    HMM_EACOIND,
-    HMM_EACOIN_QT
+    HMM_BITCOIND,
+    HMM_BITCOIN_QT
 };
 
 /** Help for options shared between UI and daemon (for -help) */
@@ -40,4 +41,4 @@ std::string HelpMessage(HelpMessageMode mode);
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();
 
-#endif // EACOIN_INIT_H
+#endif // BITCOIN_INIT_H

@@ -13,7 +13,7 @@
 - (NSString *)__bundleIdentifier
 {
     if (self == [NSBundle mainBundle]) {
-        return @"org.eacoinfoundation.EACoin-Qt";
+        return @"org.eacoin.EACoin-Qt";
     } else {
         return [self __bundleIdentifier];
     }

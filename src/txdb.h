@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_TXDB_H
-#define EACOIN_TXDB_H
+#ifndef BITCOIN_TXDB_H
+#define BITCOIN_TXDB_H
 
 #include "coins.h"
 #include "dbwrapper.h"
@@ -24,8 +24,6 @@ struct CAddressIndexIteratorKey;
 struct CAddressIndexIteratorHeightKey;
 struct CTimestampIndexKey;
 struct CTimestampIndexIteratorKey;
-struct CTimestampBlockIndexKey;
-struct CTimestampBlockIndexValue;
 struct CSpentIndexKey;
 struct CSpentIndexValue;
 class uint256;
@@ -56,7 +54,7 @@ public:
 class CBlockTreeDB : public CDBWrapper
 {
 public:
-    CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool compression = true, int maxOpenFiles = 1000);
+    CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 private:
     CBlockTreeDB(const CBlockTreeDB&);
     void operator=(const CBlockTreeDB&);
@@ -79,13 +77,10 @@ public:
                           std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex,
                           int start = 0, int end = 0);
     bool WriteTimestampIndex(const CTimestampIndexKey &timestampIndex);
-    bool ReadTimestampIndex(const unsigned int &high, const unsigned int &low, const bool fActiveOnly, std::vector<std::pair<uint256, unsigned int> > &vect);
-    bool WriteTimestampBlockIndex(const CTimestampBlockIndexKey &blockhashIndex, const CTimestampBlockIndexValue &logicalts);
-    bool ReadTimestampBlockIndex(const uint256 &hash, unsigned int &logicalTS);
+    bool ReadTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &vect);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts();
-    bool blockOnchainActive(const uint256 &hash);
 };
 
-#endif // EACOIN_TXDB_H
+#endif // BITCOIN_TXDB_H

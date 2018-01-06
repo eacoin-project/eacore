@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_QT_EDITADDRESSDIALOG_H
-#define EACOIN_QT_EDITADDRESSDIALOG_H
+#ifndef BITCOIN_QT_EDITADDRESSDIALOG_H
+#define BITCOIN_QT_EDITADDRESSDIALOG_H
 
 #include <QDialog>
 
@@ -54,4 +54,4 @@ private:
     QString address;
 };
 
-#endif // EACOIN_QT_EDITADDRESSDIALOG_H
+#endif // BITCOIN_QT_EDITADDRESSDIALOG_H

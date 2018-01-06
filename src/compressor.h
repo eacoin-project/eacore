@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_COMPRESSOR_H
-#define EACOIN_COMPRESSOR_H
+#ifndef BITCOIN_COMPRESSOR_H
+#define BITCOIN_COMPRESSOR_H
 
 #include "primitives/transaction.h"
 #include "script/script.h"
@@ -120,4 +120,4 @@ public:
     }
 };
 
-#endif // EACOIN_COMPRESSOR_H
+#endif // BITCOIN_COMPRESSOR_H

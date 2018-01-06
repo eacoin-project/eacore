@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_QT_NOTIFICATOR_H
-#define EACOIN_QT_NOTIFICATOR_H
+#ifndef BITCOIN_QT_NOTIFICATOR_H
+#define BITCOIN_QT_NOTIFICATOR_H
 
 #if defined(HAVE_CONFIG_H)
 #include "config/eacoin-config.h"
@@ -77,4 +77,4 @@ private:
 #endif
 };
 
-#endif // EACOIN_QT_NOTIFICATOR_H
+#endif // BITCOIN_QT_NOTIFICATOR_H

@@ -5,10 +5,10 @@
 
 # Test mempool limiting together/eviction with the wallet
 
-from test_framework.test_framework import EACoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-class MempoolLimitTest(EACoinTestFramework):
+class MempoolLimitTest(BitcoinTestFramework):
 
     def __init__(self):
         self.txouts = gen_return_txouts()
@@ -26,7 +26,7 @@ class MempoolLimitTest(EACoinTestFramework):
 
     def run_test(self):
         txids = []
-        utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], 90)
+        utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], 490)
 
         #create a mempool tx that will be evicted
         us0 = utxos.pop()
@@ -38,7 +38,6 @@ class MempoolLimitTest(EACoinTestFramework):
         self.nodes[0].settxfee(0) # return to automatic fee selection
         txFS = self.nodes[0].signrawtransaction(txF['hex'])
         txid = self.nodes[0].sendrawtransaction(txFS['hex'])
-        self.nodes[0].lockunspent(True, [us0])
 
         relayfee = self.nodes[0].getnetworkinfo()['relayfee']
         base_fee = relayfee*100

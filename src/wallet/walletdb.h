@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_WALLET_WALLETDB_H
-#define EACOIN_WALLET_WALLETDB_H
+#ifndef BITCOIN_WALLET_WALLETDB_H
+#define BITCOIN_WALLET_WALLETDB_H
 
 #include "amount.h"
 #include "wallet/db.h"
@@ -143,4 +143,6 @@ private:
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 void ThreadFlushWalletDB(const std::string& strFile);
 
-#endif // EACOIN_WALLET_WALLETDB_H
+bool AutoBackupWallet (CWallet* wallet, std::string strWalletFile, std::string& strBackupWarning, std::string& strBackupError);
+
+#endif // BITCOIN_WALLET_WALLETDB_H

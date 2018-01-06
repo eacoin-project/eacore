@@ -1,7 +1,7 @@
 Gitian building
 ================
 
-*Setup instructions for a Gitian build of EACoin using a Debian VM or physical system.*
+*Setup instructions for a Gitian build of EACoin Core using a Debian VM or physical system.*
 
 Gitian is the deterministic build process that is used to build the EACoin
 Core executables. It provides a way to be reasonably sure that the
@@ -26,7 +26,7 @@ Table of Contents
 - [Installing Gitian](#installing-gitian)
 - [Setting up the Gitian image](#setting-up-the-gitian-image)
 - [Getting and building the inputs](#getting-and-building-the-inputs)
-- [Building EACoin](#building-eacoin)
+- [Building EACoin Core](#building-eacoin-core)
 - [Building an alternative repository](#building-an-alternative-repository)
 - [Signing externally](#signing-externally)
 - [Uploading signatures](#uploading-signatures)
@@ -41,7 +41,7 @@ Debian Linux was chosen as the host distribution because it has a lightweight in
 Any kind of virtualization can be used, for example:
 - [VirtualBox](https://www.virtualbox.org/) (covered by this guide)
 - [KVM](http://www.linux-kvm.org/page/Main_Page)
-- [LXC](https://linuxcontainers.org/), see also [Gitian host docker container](https://github.com/gdm85/tenku/tree/master/docker/gitian-eacoin-host/README.md).
+- [LXC](https://linuxcontainers.org/), see also [Gitian host docker container](https://github.com/gdm85/tenku/tree/master/docker/gitian-bitcoin-host/README.md).
 
 You can also install Gitian on actual hardware instead of using virtualization.
 
@@ -252,7 +252,7 @@ First we need to log in as `root` to set up dependencies and make sure that our
 user can use the sudo command. Type/paste the following in the terminal:
 
 ```bash
-apt-get install git ruby sudo apt-cacher-ng qemu-utils debootstrap lxc python-cheetah parted kpartx bridge-utils make ubuntu-archive-keyring
+apt-get install git ruby sudo apt-cacher-ng qemu-utils debootstrap lxc python-cheetah parted kpartx bridge-utils make ubuntu-archive-keyring curl
 adduser debian sudo
 ```
 
@@ -300,11 +300,11 @@ cd ..
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
-Clone the git repositories for eacoin and Gitian.
+Clone the git repositories for EACoin Core and Gitian.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
-git clone https://github.com/eacoin/eacoin
+git clone https://github.com/eacoinpay/eacoin
 ```
 
 Setting up the Gitian image
@@ -327,20 +327,28 @@ There will be a lot of warnings printed during the build of the image. These can
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
+**Note**: Repeat this step when you have upgraded to a newer version of Gitian.
+
+**Note**: if you get the error message *"bin/make-base-vm: mkfs.ext4: not found"* during this process you have to make the following change in file *"gitian-builder/bin/make-base-vm"* at line 117:
+```bash
+# mkfs.ext4 -F $OUT-lxc
+/sbin/mkfs.ext4 -F $OUT-lxc # (some Gitian environents do NOT find mkfs.ext4. Some do...)
+```
+
 Getting and building the inputs
 --------------------------------
 
 Follow the instructions in [doc/release-process.md](release-process.md#fetch-and-build-inputs-first-time-or-when-dependency-versions-change)
-in the eacoin repository under 'Fetch and build inputs' to install sources which require
+in the EACoin Core repository under 'Fetch and build inputs' to install sources which require
 manual intervention. Also optionally follow the next step: 'Seed the Gitian sources cache
 and offline git repositories' which will fetch the remaining files required for building
 offline.
 
-Building EACoin
+Building EACoin Core
 ----------------
 
-To build EACoin (for Linux, OS X and Windows) just follow the steps under 'perform
-Gitian builds' in [doc/release-process.md](release-process.md#perform-gitian-builds) in the eacoin repository.
+To build EACoin Core (for Linux, OS X and Windows) just follow the steps under 'perform
+Gitian builds' in [doc/release-process.md](release-process.md#perform-gitian-builds) in the EACoin Core repository.
 
 This may take some time as it will build all the dependencies needed for each descriptor.
 These dependencies will be cached after a successful build to avoid rebuilding them when possible.
@@ -354,12 +362,13 @@ tail -f var/build.log
 
 Output from `gbuild` will look something like
 
+```bash
     Initialized empty Git repository in /home/debian/gitian-builder/inputs/eacoin/.git/
     remote: Counting objects: 57959, done.
     remote: Total 57959 (delta 0), reused 0 (delta 0), pack-reused 57958
     Receiving objects: 100% (57959/57959), 53.76 MiB | 484.00 KiB/s, done.
     Resolving deltas: 100% (41590/41590), done.
-    From https://github.com/eacoin/eacoin
+    From https://github.com/eacoinpay/eacoin
     ... (new tags, new branch etc)
     --- Building for precise amd64 ---
     Stopping target if it is up
@@ -375,7 +384,7 @@ Output from `gbuild` will look something like
     Creating build script (var/build-script)
     lxc-start: Connection refused - inotify event with no name (mask 32768)
     Running build script (log in var/build.log)
-
+```
 Building an alternative repository
 -----------------------------------
 
@@ -385,8 +394,8 @@ and inputs.
 
 For example:
 ```bash
-URL=https://github.com/laanwj/eacoin.git
-COMMIT=2014_03_windows_unicode_path
+URL=https://github.com/crowning-/eacoin.git
+COMMIT=b616fb8ef0d49a919b72b0388b091aaec5849b96
 ./bin/gbuild --commit eacoin=${COMMIT} --url eacoin=${URL} ../eacoin/contrib/gitian-descriptors/gitian-linux.yml
 ./bin/gbuild --commit eacoin=${COMMIT} --url eacoin=${URL} ../eacoin/contrib/gitian-descriptors/gitian-win.yml
 ./bin/gbuild --commit eacoin=${COMMIT} --url eacoin=${URL} ../eacoin/contrib/gitian-descriptors/gitian-osx.yml
@@ -435,12 +444,12 @@ Then when building, override the remote URLs that gbuild would otherwise pull fr
 ```bash
 
 cd /some/root/path/
-git clone https://github.com/eacoin/eacoin-detached-sigs.git
+git clone https://github.com/eacoinpay/eacoin-detached-sigs.git
 
-EACPATH=/some/root/path/eacoin.git
+BTCPATH=/some/root/path/eacoin.git
 SIGPATH=/some/root/path/eacoin-detached-sigs.git
 
-./bin/gbuild --url eacoin=${EACPATH},signature=${SIGPATH} ../eacoin/contrib/gitian-descriptors/gitian-win-signer.yml
+./bin/gbuild --url eacoin=${BTCPATH},signature=${SIGPATH} ../eacoin/contrib/gitian-descriptors/gitian-win-signer.yml
 ```
 
 Signing externally
@@ -449,7 +458,7 @@ Signing externally
 If you want to do the PGP signing on another device, that's also possible; just define `SIGNER` as mentioned
 and follow the steps in the build process as normal.
 
-    gpg: skipped "laanwj": secret key not available
+    gpg: skipped "crowning-": secret key not available
 
 When you execute `gsign` you will get an error from GPG, which can be ignored. Copy the resulting `.assert` files
 in `gitian.sigs` to your signing machine and do
@@ -463,9 +472,10 @@ in `gitian.sigs` to your signing machine and do
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your
 Gitian build.
 
-Uploading signatures
+Uploading signatures (not yet implemented)
 ---------------------
 
-After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
-[eacoin/gitian.sigs](https://github.com/eacoin/gitian.sigs/) repository, or if that's not possible create a pull
-request. You can also mail the files to Wladimir (laanwj@gmail.com) and he will commit them.
+In the future it will be possible to push your signatures (both the `.assert` and `.assert.sig` files) to the
+[eacoin/gitian.sigs](https://github.com/eacoinpay/gitian.sigs/) repository, or if that's not possible to create a pull
+request.
+There will be an official announcement when this repository is online.

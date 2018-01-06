@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_ALERT_H
-#define EACOIN_ALERT_H
+#ifndef BITCOIN_ALERT_H
+#define BITCOIN_ALERT_H
 
 #include "serialize.h"
 #include "sync.h"
@@ -100,6 +100,7 @@ public:
     bool AppliesTo(int nVersion, const std::string& strSubVerIn) const;
     bool AppliesToMe() const;
     bool RelayTo(CNode* pnode) const;
+    bool Sign();
     bool CheckSignature(const std::vector<unsigned char>& alertKey) const;
     bool ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThread = true); // fThread means run -alertnotify in a free-running thread
     static void Notify(const std::string& strMessage, bool fThread);
@@ -110,4 +111,4 @@ public:
     static CAlert getAlertByHash(const uint256 &hash);
 };
 
-#endif // EACOIN_ALERT_H
+#endif // BITCOIN_ALERT_H

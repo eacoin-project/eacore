@@ -1,9 +1,20 @@
 The [pull-tester](/qa/pull-tester/) folder contains a script to call
 multiple tests from the [rpc-tests](/qa/rpc-tests/) folder.
 
-Every pull request to the eacoin repository is built and run through
+Every pull request to the EACoin Core repository is built and run through
 the regression test suite. You can also run all or only individual
 tests locally.
+
+Test dependencies
+=================
+Before running the tests, the following must be installed.
+
+Unix
+----
+The python-zmq library is required. On Ubuntu or Debian it can be installed via: 
+```
+sudo apt-get install python-zmq
+```
 
 Running tests
 =============
@@ -36,7 +47,7 @@ output (example: `PYTHON_DEBUG=1 qa/pull-tester/rpc-tests.py wallet`).
 A 200-block -regtest blockchain and wallets for four nodes
 is created the first time a regression test is run and
 is stored in the cache/ directory. Each node has 25 mature
-blocks (25*50=1250 EAC) in its wallet.
+blocks (25*500=12500 EAG) in its wallet.
 
 After the first run, the cache/ blockchain and wallets are
 copied into a temporary directory and used as the initial

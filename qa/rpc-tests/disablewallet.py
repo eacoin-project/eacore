@@ -7,11 +7,11 @@
 # Exercise API with -disablewallet.
 #
 
-from test_framework.test_framework import EACoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 
-class DisableWalletTest (EACoinTestFramework):
+class DisableWalletTest (BitcoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -23,10 +23,10 @@ class DisableWalletTest (EACoinTestFramework):
         self.sync_all()
 
     def run_test (self):
-        # Check regression: https://github.com/eacoin/eacoin/issues/6963#issuecomment-154548880
-        x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
+        # Check regression: https://github.com/bitcoin/bitcoin/issues/6963#issuecomment-154548880
+        x = self.nodes[0].validateaddress('7TSBtVu959hGEGPKyHjJz9k55RpWrPffXz')
         assert(x['isvalid'] == False)
-        x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')
+        x = self.nodes[0].validateaddress('ycwedq2f3sz2Yf9JqZsBCQPxp18WU3Hp4J')
         assert(x['isvalid'] == True)
 
 if __name__ == '__main__':

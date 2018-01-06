@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_CONSENSUS_VERSIONBITS
-#define EACOIN_CONSENSUS_VERSIONBITS
+#ifndef BITCOIN_CONSENSUS_VERSIONBITS
+#define BITCOIN_CONSENSUS_VERSIONBITS
 
 #include "chain.h"
 #include <map>

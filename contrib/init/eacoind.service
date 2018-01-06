@@ -1,0 +1,22 @@
+[Unit]
+Description=EACoin's distributed currency daemon
+After=network.target
+
+[Service]
+User=eacoincore
+Group=eacoincore
+
+Type=forking
+PIDFile=/var/lib/eacoind/eacoind.pid
+ExecStart=/usr/bin/eacoind -daemon -pid=/var/lib/eacoind/eacoind.pid \
+-conf=/etc/eacoincore/eacoin.conf -datadir=/var/lib/eacoind -disablewallet
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

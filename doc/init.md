@@ -13,7 +13,7 @@ can be found in the contrib/init folder.
 1. Service User
 ---------------------------------
 
-All three Linux startup configurations assume the existence of a "eacoin" user
+All three Linux startup configurations assume the existence of a "eacoincore" user
 and group.  They must be created before attempting to use these scripts.
 The OS X configuration assumes eacoind will be set up for the current user.
 
@@ -54,23 +54,23 @@ see `contrib/debian/examples/eacoin.conf`.
 All three configurations assume several paths that might need to be adjusted.
 
 Binary:              `/usr/bin/eacoind`  
-Configuration file:  `/etc/eacoin/eacoin.conf`  
+Configuration file:  `/etc/eacoincore/eacoin.conf`  
 Data directory:      `/var/lib/eacoind`  
 PID file:            `/var/run/eacoind/eacoind.pid` (OpenRC and Upstart) or `/var/lib/eacoind/eacoind.pid` (systemd)  
 Lock file:           `/var/lock/subsys/eacoind` (CentOS)  
 
 The configuration file, PID directory (if applicable) and data directory
-should all be owned by the eacoin user and group.  It is advised for security
+should all be owned by the eacoincore user and group.  It is advised for security
 reasons to make the configuration file and data directory only readable by the
-eacoin user and group.  Access to eacoin-cli and other eacoind rpc clients
+eacoincore user and group.  Access to eacoin-cli and other eacoind rpc clients
 can then be controlled by group membership.
 
 3b) Mac OS X
 
 Binary:              `/usr/local/bin/eacoind`  
-Configuration file:  `~/Library/Application Support/EACoin/eacoin.conf`  
-Data directory:      `~/Library/Application Support/EACoin`
-Lock file:           `~/Library/Application Support/EACoin/.lock`
+Configuration file:  `~/Library/Application Support/EACoinCore/eacoin.conf`  
+Data directory:      `~/Library/Application Support/EACoinCore`
+Lock file:           `~/Library/Application Support/EACoinCore/.lock`
 
 4. Installing Service Configuration
 -----------------------------------
@@ -116,7 +116,7 @@ This Launch Agent will cause eacoind to start whenever the user logs in.
 
 NOTE: This approach is intended for those wanting to run eacoind as the current user.
 You will need to modify org.eacoin.eacoind.plist if you intend to use it as a
-Launch Daemon with a dedicated eacoin user.
+Launch Daemon with a dedicated eacoincore user.
 
 5. Auto-respawn
 -----------------------------------

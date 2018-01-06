@@ -15,8 +15,7 @@
 #ifdef DEBUG_LOCKCONTENTION
 void PrintLockContention(const char* pszName, const char* pszFile, int nLine)
 {
-    LogPrintf("LOCKCONTENTION: %s\n", pszName);
-    LogPrintf("Locker: %s:%d\n", pszFile, nLine);
+    LogPrintf("LOCKCONTENTION: %s Locker: %s:%d\n", pszName, pszFile, nLine);
 }
 #endif /* DEBUG_LOCKCONTENTION */
 
@@ -73,41 +72,46 @@ static void potential_deadlock_detected(const std::pair<void*, void*>& mismatch,
     bool firstLocked = false;
     bool secondLocked = false;
     bool onlyMaybeDeadlock = false;
+    std::string strOutput = "";
 
-    LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
-    LogPrintf("Previous lock order was:\n");
+    strOutput += "POTENTIAL DEADLOCK DETECTED\n";
+    strOutput += "Previous lock order was:\n";
     BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s2) {
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)");
+            strOutput += " (1)";
             if (!firstLocked && secondLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             firstLocked = true;
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)");
+            strOutput += " (2)";
             if (!secondLocked && firstLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             secondLocked = true;
         }
-        LogPrintf(" %s\n", i.second.ToString());
+        strOutput += strprintf(" %s\n", i.second.ToString().c_str());
     }
     firstLocked = false;
     secondLocked = false;
-    LogPrintf("Current lock order is:\n");
+    strOutput += "Current lock order is:\n";
     BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, s1) {
         if (i.first == mismatch.first) {
-            LogPrintf(" (1)");
+            strOutput += " (1)";
             if (!firstLocked && secondLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             firstLocked = true;
         }
         if (i.first == mismatch.second) {
-            LogPrintf(" (2)");
+            strOutput += " (2)";
             if (!secondLocked && firstLocked && i.second.fTry)
                 onlyMaybeDeadlock = true;
             secondLocked = true;
         }
-        LogPrintf(" %s\n", i.second.ToString());
+        strOutput += strprintf(" %s\n", i.second.ToString().c_str());
+    }
+    if(!onlyMaybeDeadlock) {
+        printf("%s\n", strOutput.c_str());
+        LogPrintf("%s\n", strOutput.c_str());
     }
     assert(onlyMaybeDeadlock);
 }

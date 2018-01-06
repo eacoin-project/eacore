@@ -3,85 +3,69 @@ DIST_SUBDIRS = secp256k1 univalue
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
 AM_CXXFLAGS = $(HARDENED_CXXFLAGS)
 AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
+EXTRA_LIBRARIES =
 
-if EMBEDDED_LEVELDB
-LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
-LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
-LIBLEVELDB += $(builddir)/leveldb/libleveldb.a
-LIBMEMENV  += $(builddir)/leveldb/libmemenv.a
+BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
+BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
-# NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
-$(LIBLEVELDB): $(LIBMEMENV)
+BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
+BITCOIN_INCLUDES += -I$(srcdir)/univalue/include
 
-$(LIBLEVELDB) $(LIBMEMENV):
-	@echo "Building LevelDB ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" \
-	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
-          OPT="$(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS) $(AM_CPPFLAGS) $(CPPFLAGS) -D__STDC_LIMIT_MACROS"
-endif
-
-EACOIN_CONFIG_INCLUDES=-I$(builddir)/config
-EACOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
-
-EACOIN_INCLUDES += -I$(srcdir)/secp256k1/include
-EACOIN_INCLUDES += -I$(srcdir)/univalue/include
-
-LIBEACOIN_SERVER=libeacoin_server.a
-LIBEACOIN_WALLET=libeacoin_wallet.a
-LIBEACOIN_COMMON=libeacoin_common.a
-LIBEACOIN_CLI=libeacoin_cli.a
-LIBEACOIN_UTIL=libeacoin_util.a
-LIBEACOIN_CRYPTO=crypto/libeacoin_crypto.a
-LIBEACOINQT=qt/libeacoinqt.a
+LIBBITCOIN_SERVER=libbitcoin_server.a
+LIBBITCOIN_WALLET=libbitcoin_wallet.a
+LIBBITCOIN_COMMON=libbitcoin_common.a
+LIBBITCOIN_CLI=libbitcoin_cli.a
+LIBBITCOIN_UTIL=libbitcoin_util.a
+LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
+LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBUNIVALUE=univalue/libunivalue.la
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
-  
+
 $(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
-EXTRA_LIBRARIES = \
-  crypto/libeacoin_crypto.a \
-  libeacoin_util.a \
-  libeacoin_common.a \
-  libeacoin_server.a \
-  libeacoin_cli.a
+EXTRA_LIBRARIES += \
+  crypto/libbitcoin_crypto.a \
+  libbitcoin_util.a \
+  libbitcoin_common.a \
+  libbitcoin_server.a \
+  libbitcoin_cli.a
 if ENABLE_WALLET
-EACOIN_INCLUDES += $(BDB_CPPFLAGS)
-EXTRA_LIBRARIES += libeacoin_wallet.a
+BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
+EXTRA_LIBRARIES += libbitcoin_wallet.a
 endif
 if ENABLE_ZMQ
-EXTRA_LIBRARIES += libeacoin_zmq.a
+EXTRA_LIBRARIES += libbitcoin_zmq.a
 endif
 
-if BUILD_EACOIN_LIBS
-lib_LTLIBRARIES = libeacoinconsensus.la
-LIBEACOIN_CONSENSUS=libeacoinconsensus.la
+if BUILD_BITCOIN_LIBS
+lib_LTLIBRARIES = libbitcoinconsensus.la
+LIBBITCOIN_CONSENSUS=libbitcoinconsensus.la
 else
-LIBEACOIN_CONSENSUS=
+LIBBITCOIN_CONSENSUS=
 endif
 
 bin_PROGRAMS =
 TESTS =
 BENCHMARKS =
 
-if BUILD_EACOIND
+if BUILD_BITCOIND
   bin_PROGRAMS += eacoind
 endif
 
-if BUILD_EACOIN_UTILS
+if BUILD_BITCOIN_UTILS
   bin_PROGRAMS += eacoin-cli eacoin-tx
-if ENABLE_WALLET
-  bin_PROGRAMS += wallet-utility
-endif
 endif
 
 .PHONY: FORCE check-symbols check-security
 # eacoin core #
-EACOIN_CORE_H = \
+BITCOIN_CORE_H = \
+  activemasternode.h \
   addressindex.h \
   spentindex.h \
   addrman.h \
@@ -90,6 +74,8 @@ EACOIN_CORE_H = \
   arith_uint256.h \
   base58.h \
   bloom.h \
+  cachemap.h \
+  cachemultimap.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -110,20 +96,38 @@ EACOIN_CORE_H = \
   consensus/validation.h \
   core_io.h \
   core_memusage.h \
+  darksend.h \
+  dsnotificationinterface.h \
+  darksend-relay.h \
+  governance.h \
+  governance-classes.h \
+  governance-exceptions.h \
+  governance-object.h \
+  governance-vote.h \
+  governance-votedb.h \
+  flat-database.h \
   hash.h \
   httprpc.h \
   httpserver.h \
   init.h \
+  instantx.h \
   key.h \
+  keepass.h \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
   main.h \
+  masternode.h \
+  masternode-payments.h \
+  masternode-sync.h \
+  masternodeman.h \
+  masternodeconfig.h \
   memusage.h \
   merkleblock.h \
   miner.h \
   net.h \
   netbase.h \
+  netfulfilledman.h \
   noui.h \
   policy/fees.h \
   policy/policy.h \
@@ -147,6 +151,7 @@ EACOIN_CORE_H = \
   script/sign.h \
   script/standard.h \
   serialize.h \
+  spork.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -184,12 +189,12 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh $(abs_top_builddir)/src/obj/build.h \
 	  $(abs_top_srcdir)
-libeacoin_util_a-clientversion.$(OBJEXT): obj/build.h
+libbitcoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between eacoind and eacoin-qt
-libeacoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
-libeacoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libeacoin_server_a_SOURCES = \
+libbitcoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libbitcoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_server_a_SOURCES = \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -199,36 +204,45 @@ libeacoin_server_a_SOURCES = \
   httpserver.cpp \
   init.cpp \
   dbwrapper.cpp \
+  governance.cpp \
+  governance-classes.cpp \
+  governance-object.cpp \
+  governance-vote.cpp \
+  governance-votedb.cpp \
   main.cpp \
   merkleblock.cpp \
   miner.cpp \
   net.cpp \
+  netfulfilledman.cpp \
   noui.cpp \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \
   rest.cpp \
   rpcblockchain.cpp \
+  rpcmasternode.cpp \
+  rpcgovernance.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
   script/sigcache.cpp \
+  sendalert.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
   validationinterface.cpp \
   versionbits.cpp \
-  $(EACOIN_CORE_H)
+  $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
-LIBEACOIN_ZMQ=libeacoin_zmq.a
+LIBBITCOIN_ZMQ=libbitcoin_zmq.a
 
-libeacoin_zmq_a_CPPFLAGS = $(EACOIN_INCLUDES) $(ZMQ_CFLAGS)
-libeacoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libeacoin_zmq_a_SOURCES = \
+libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libbitcoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
   zmq/zmqnotificationinterface.cpp \
   zmq/zmqpublishnotifier.cpp
@@ -237,9 +251,20 @@ endif
 
 # wallet: shared between eacoind and eacoin-qt, but only linked
 # when wallet enabled
-libeacoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_INCLUDES)
-libeacoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libeacoin_wallet_a_SOURCES = \
+libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_wallet_a_SOURCES = \
+  activemasternode.cpp \
+  darksend.cpp \
+  dsnotificationinterface.cpp \
+  darksend-relay.cpp \
+  instantx.cpp \
+  masternode.cpp \
+  masternode-payments.cpp \
+  masternode-sync.cpp \
+  masternodeconfig.cpp \
+  masternodeman.cpp \
+  keepass.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/rpcdump.cpp \
@@ -248,30 +273,55 @@ libeacoin_wallet_a_SOURCES = \
   wallet/wallet_ismine.cpp \
   wallet/walletdb.cpp \
   policy/rbf.cpp \
-  $(EACOIN_CORE_H)
+  $(BITCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libeacoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_CONFIG_INCLUDES)
-crypto_libeacoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-crypto_libeacoin_crypto_a_SOURCES = \
+crypto_libbitcoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) $(PIC_FLAGS)
+crypto_libbitcoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
+crypto_libbitcoin_crypto_a_SOURCES = \
   crypto/common.h \
   crypto/hmac_sha256.cpp \
   crypto/hmac_sha256.h \
   crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
   crypto/ripemd160.cpp \
+  crypto/aes_helper.c \
+  crypto/blake.c \
+  crypto/bmw.c \
+  crypto/cubehash.c \
+  crypto/echo.c \
+  crypto/groestl.c \
+  crypto/jh.c \
+  crypto/keccak.c \
+  crypto/luffa.c \
+  crypto/shavite.c \
+  crypto/simd.c \
+  crypto/skein.c \
   crypto/ripemd160.h \
   crypto/sha1.cpp \
   crypto/sha1.h \
   crypto/sha256.cpp \
   crypto/sha256.h \
+  crypto/sha512.h \
+  crypto/sph_blake.h \
+  crypto/sph_bmw.h \
+  crypto/sph_cubehash.h \
+  crypto/sph_echo.h \
+  crypto/sph_groestl.h \
+  crypto/sph_jh.h \
+  crypto/sph_keccak.h \
+  crypto/sph_luffa.h \
+  crypto/sph_shavite.h \
+  crypto/sph_simd.h \
+  crypto/sph_skein.h \
+  crypto/sph_types.h \
   crypto/sha512.cpp \
   crypto/sha512.h
 
 # common: shared between eacoind, and eacoin-qt and non-server tools
-libeacoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_INCLUDES)
-libeacoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libeacoin_common_a_SOURCES = \
+libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_common_a_SOURCES = \
   amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
@@ -295,14 +345,15 @@ libeacoin_common_a_SOURCES = \
   script/script_error.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  $(EACOIN_CORE_H)
+  spork.cpp \
+  $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libeacoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_INCLUDES)
-libeacoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libeacoin_util_a_SOURCES = \
+libbitcoin_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libbitcoin_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_util_a_SOURCES = \
   support/pagelocker.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
@@ -318,25 +369,25 @@ libeacoin_util_a_SOURCES = \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \
-  $(EACOIN_CORE_H)
+  $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
-libeacoin_util_a_SOURCES += compat/glibc_compat.cpp
+libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
 endif
 
 # cli: shared between eacoin-cli and eacoin-qt
-libeacoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_INCLUDES)
-libeacoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libeacoin_cli_a_SOURCES = \
+libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libbitcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_cli_a_SOURCES = \
   rpcclient.cpp \
-  $(EACOIN_CORE_H)
+  $(BITCOIN_CORE_H)
 
-nodist_libeacoin_util_a_SOURCES = $(srcdir)/obj/build.h
+nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
-# eacoind binary #
+# bitcoind binary #
 eacoind_SOURCES = eacoind.cpp
-eacoind_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_INCLUDES)
+eacoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 eacoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 eacoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -345,58 +396,45 @@ eacoind_SOURCES += eacoind-res.rc
 endif
 
 eacoind_LDADD = \
-  $(LIBEACOIN_SERVER) \
-  $(LIBEACOIN_COMMON) \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
-  $(LIBEACOIN_UTIL) \
-  $(LIBEACOIN_CRYPTO) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
 if ENABLE_ZMQ
-eacoind_LDADD += $(LIBEACOIN_ZMQ) $(ZMQ_LIBS)
+eacoind_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_WALLET
-eacoind_LDADD += libeacoin_wallet.a
+eacoind_LDADD += libbitcoin_wallet.a
 endif
 
 eacoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 
 # eacoin-cli binary #
 eacoin_cli_SOURCES = eacoin-cli.cpp
-eacoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_INCLUDES) $(EVENT_CFLAGS)
+eacoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 eacoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 eacoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-
-# wallet-utility binary #
-if ENABLE_WALLET
-wallet_utility_SOURCES = wallet-utility.cpp
-wallet_utility_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_INCLUDES) $(EVENT_CFLAG)
-wallet_utility_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-wallet_utility_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-endif
 
 if TARGET_WINDOWS
 eacoin_cli_SOURCES += eacoin-cli-res.rc
 endif
 
 eacoin_cli_LDADD = \
-  $(LIBEACOIN_CLI) \
+  $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
-  $(LIBEACOIN_UTIL)
-
+  $(LIBBITCOIN_UTIL)
 eacoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
-if ENABLE_WALLET
-wallet_utility_LDADD = libeacoin_wallet.a $(LIBEACOIN_COMMON) $(LIBEACOIN_CRYPTO) $(LIBSECP256K1) $(LIBEACOIN_UTIL) $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS)
-endif
-
 #
 
 # eacoin-tx binary #
 eacoin_tx_SOURCES = eacoin-tx.cpp
-eacoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(EACOIN_INCLUDES)
+eacoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 eacoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 eacoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -406,18 +444,18 @@ endif
 
 eacoin_tx_LDADD = \
   $(LIBUNIVALUE) \
-  $(LIBEACOIN_COMMON) \
-  $(LIBEACOIN_UTIL) \
-  $(LIBEACOIN_CRYPTO) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
 eacoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
-# eacoinconsensus library #
-if BUILD_EACOIN_LIBS
-include_HEADERS = script/eacoinconsensus.h
-libeacoinconsensus_la_SOURCES = \
+# bitcoinconsensus library #
+if BUILD_BITCOIN_LIBS
+include_HEADERS = script/bitcoinconsensus.h
+libbitcoinconsensus_la_SOURCES = \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
   crypto/sha1.cpp \
@@ -426,20 +464,20 @@ libeacoinconsensus_la_SOURCES = \
   hash.cpp \
   primitives/transaction.cpp \
   pubkey.cpp \
-  script/eacoinconsensus.cpp \
+  script/bitcoinconsensus.cpp \
   script/interpreter.cpp \
   script/script.cpp \
   uint256.cpp \
   utilstrencodings.cpp
 
 if GLIBC_BACK_COMPAT
-  libeacoinconsensus_la_SOURCES += compat/glibc_compat.cpp
+  libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libeacoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libeacoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libeacoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_EACOIN_INTERNAL
-libeacoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
+libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
 endif
 #
@@ -492,6 +530,10 @@ endif
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(abspath $(<D) $<)
+
+if EMBEDDED_LEVELDB
+include Makefile.leveldb.include
+endif
 
 if ENABLE_TESTS
 include Makefile.test.include

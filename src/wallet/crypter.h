@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_WALLET_CRYPTER_H
-#define EACOIN_WALLET_CRYPTER_H
+#ifndef BITCOIN_WALLET_CRYPTER_H
+#define BITCOIN_WALLET_CRYPTER_H
 
 #include "keystore.h"
 #include "serialize.h"
@@ -107,6 +107,10 @@ public:
     }
 };
 
+bool EncryptAES256(const SecureString& sKey, const SecureString& sPlaintext, const std::string& sIV, std::string& sCiphertext);
+bool DecryptAES256(const SecureString& sKey, const std::string& sCiphertext, const std::string& sIV, SecureString& sPlaintext);
+
+
 /** Keystore which keeps the private keys encrypted.
  * It derives from the basic key store, which is used if no encryption is active.
  */
@@ -124,16 +128,19 @@ private:
     //! keeps track of whether Unlock has run a thorough check before
     bool fDecryptionThoroughlyChecked;
 
+    //! if fOnlyMixingAllowed is true, only mixing should be allowed in unlocked wallet
+    bool fOnlyMixingAllowed;
+
 protected:
     bool SetCrypted();
 
     //! will encrypt previously unencrypted keys
     bool EncryptKeys(CKeyingMaterial& vMasterKeyIn);
 
-    bool Unlock(const CKeyingMaterial& vMasterKeyIn);
+    bool Unlock(const CKeyingMaterial& vMasterKeyIn, bool fForMixingOnly = false);
 
 public:
-    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false)
+    CCryptoKeyStore() : fUseCrypto(false), fDecryptionThoroughlyChecked(false), fOnlyMixingAllowed(false)
     {
     }
 
@@ -142,7 +149,15 @@ public:
         return fUseCrypto;
     }
 
-    bool IsLocked() const
+    // This function should be used in a different combinations to determine
+    // if CCryptoKeyStore is fully locked so that no operations requiring access
+    // to private keys are possible:
+    //      IsLocked(true)
+    // or if CCryptoKeyStore's private keys are available for mixing only:
+    //      !IsLocked(true) && IsLocked()
+    // or if they are available for everything:
+    //      !IsLocked()
+    bool IsLocked(bool fForMixing = false) const
     {
         if (!IsCrypted())
             return false;
@@ -151,10 +166,19 @@ public:
             LOCK(cs_KeyStore);
             result = vMasterKey.empty();
         }
+        // fForMixing   fOnlyMixingAllowed  return
+        // ---------------------------------------
+        // true         true                result
+        // true         false               result
+        // false        true                true
+        // false        false               result
+
+        if(!fForMixing && fOnlyMixingAllowed) return true;
+
         return result;
     }
 
-    bool Lock();
+    bool Lock(bool fAllowMixing = false);
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
@@ -193,4 +217,4 @@ public:
     boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
 };
 
-#endif // EACOIN_WALLET_CRYPTER_H
+#endif // BITCOIN_WALLET_CRYPTER_H

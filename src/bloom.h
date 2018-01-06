@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_BLOOM_H
-#define EACOIN_BLOOM_H
+#ifndef BITCOIN_BLOOM_H
+#define BITCOIN_BLOOM_H
 
 #include "serialize.h"
 
@@ -135,4 +135,4 @@ private:
 };
 
 
-#endif // EACOIN_BLOOM_H
+#endif // BITCOIN_BLOOM_H

@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef EACOIN_DBWRAPPER_H
-#define EACOIN_DBWRAPPER_H
+#ifndef BITCOIN_DBWRAPPER_H
+#define BITCOIN_DBWRAPPER_H
 
 #include "clientversion.h"
 #include "serialize.h"
@@ -169,16 +169,14 @@ private:
 
 public:
     /**
-     * @param[in] path          Location in the filesystem where leveldb data will be stored.
-     * @param[in] nCacheSize    Configures various leveldb cache settings.
-     * @param[in] fMemory       If true, use leveldb's memory environment.
-     * @param[in] fWipe         If true, remove all existing data.
-     * @param[in] obfuscate     If true, store data obfuscated via simple XOR. If false, XOR
-     *                          with a zero'd byte array.
-     * @param[in] compression   Enable snappy compression for the database
-     * @param[in] maxOpenFiles  The maximum number of open files for the database
+     * @param[in] path        Location in the filesystem where leveldb data will be stored.
+     * @param[in] nCacheSize  Configures various leveldb cache settings.
+     * @param[in] fMemory     If true, use leveldb's memory environment.
+     * @param[in] fWipe       If true, remove all existing data.
+     * @param[in] obfuscate   If true, store data obfuscated via simple XOR. If false, XOR
+     *                        with a zero'd byte array.
      */
-    CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false, bool compression = false, int maxOpenFiles = 64);
+    CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false);
     ~CDBWrapper();
 
     template <typename K, typename V>
@@ -278,5 +276,5 @@ public:
 
 };
 
-#endif // EACOIN_DBWRAPPER_H
+#endif // BITCOIN_DBWRAPPER_H
 

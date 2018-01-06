@@ -7,22 +7,43 @@
 # Test fee estimation code
 #
 
-from test_framework.test_framework import EACoinTestFramework
+from collections import OrderedDict
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
 # So we can create many many transactions without needing to spend
 # time signing.
-P2SH_1 = "2MySexEGVzZpRgNQ1JdjdP5bRETznm3roQ2" # P2SH of "OP_1 OP_DROP"
-P2SH_2 = "2NBdpwq8Aoo1EEKEXPNrKvr5xQr3M9UfcZA" # P2SH of "OP_2 OP_DROP"
+P2SH_1 = "8kctg1WWKdoLveifyNnDYtRAqBPpqgL8z2" # P2SH of "OP_1 OP_DROP"
+P2SH_2 = "8xp4fcNB8rz9UbZC47tv6eui1ZSPMd3iYT" # P2SH of "OP_2 OP_DROP"
 # Associated ScriptSig's to spend satisfy P2SH_1 and P2SH_2
 # 4 bytes of OP_TRUE and push 2-byte redeem script of "OP_1 OP_DROP" or "OP_2 OP_DROP"
 SCRIPT_SIG = ["0451025175", "0451025275"]
 
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
+        return super(DecimalEncoder, self).default(o)
+
+def swap_outputs_in_rawtx(rawtx, outputs, inputnum):
+    '''
+    Since dictionaries in python are unsorted make sure that our outputs are correctly ordered.
+    Note: comparing strings to get "correct order" is based on the fact that
+    P2SH_1 string is < P2SH_2 string in this particular case.
+    '''
+    outputs_unordered = json.dumps(outputs, cls=DecimalEncoder)
+    outputs_ordered = json.dumps(outputs, sort_keys=True, cls=DecimalEncoder)
+    if outputs_ordered != outputs_unordered: # nope, we need to do some work here
+        first_rawoutput = rawtx[12+82*inputnum:12+82*inputnum+64]
+        second_rawoutput = rawtx[12+82*inputnum+64:12+82*inputnum+64+64]
+        rawtx = rawtx[0:12+82*inputnum] + second_rawoutput + first_rawoutput + rawtx[12+82*inputnum+64+64:]
+    return rawtx
+
 def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee_increment):
     '''
     Create and send a transaction with a random fee.
-    The transaction pays to a trival P2SH script, and assumes that its inputs
+    The transaction pays to a trivial P2SH script, and assumes that its inputs
     are of the same form.
     The function takes a list of confirmed outputs and unconfirmed outputs
     and attempts to use the confirmed list first for its inputs.
@@ -49,10 +70,11 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
         if total_in <= amount + fee:
             raise RuntimeError("Insufficient funds: need %d, have %d"%(amount+fee, total_in))
     outputs = {}
-    outputs[P2SH_1] = total_in - amount - fee
-    outputs[P2SH_2] = amount
+    outputs = OrderedDict([(P2SH_1, total_in - amount - fee),
+                           (P2SH_2, amount)])
     rawtx = from_node.createrawtransaction(inputs, outputs)
-    # Createrawtransaction constructions a transaction that is ready to be signed
+    rawtx = swap_outputs_in_rawtx(rawtx, outputs, len(inputs))
+    # createrawtransaction constructs a transaction that is ready to be signed.
     # These transactions don't need to be signed, but we still have to insert the ScriptSig
     # that will satisfy the ScriptPubKey.
     completetx = rawtx[0:10]
@@ -78,13 +100,12 @@ def split_inputs(from_node, txins, txouts, initial_split = False):
     '''
     prevtxout = txins.pop()
     inputs = []
-    outputs = {}
     inputs.append({ "txid" : prevtxout["txid"], "vout" : prevtxout["vout"] })
     half_change = satoshi_round(prevtxout["amount"]/2)
-    rem_change = prevtxout["amount"] - half_change  - Decimal("0.00001000")
-    outputs[P2SH_1] = half_change
-    outputs[P2SH_2] = rem_change
+    rem_change = prevtxout["amount"] - half_change  - Decimal("0.00010000")
+    outputs = OrderedDict([(P2SH_1, half_change), (P2SH_2, rem_change)])
     rawtx = from_node.createrawtransaction(inputs, outputs)
+    rawtx = swap_outputs_in_rawtx(rawtx, outputs, len(inputs))
     # If this is the initial split we actually need to sign the transaction
     # Otherwise we just need to insert the property ScriptSig
     if (initial_split) :
@@ -105,7 +126,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
         print([str(all_estimates[e-1]) for e in [1,2,3,6,15,25]])
     delta = 1.0e-6 # account for rounding error
     last_e = max(fees_seen)
-    for e in filter(lambda x: x >= 0, all_estimates):
+    for e in [x for x in all_estimates if x >= 0]:
         # Estimates should be within the bounds of what transactions fees actually were:
         if float(e)+delta < min(fees_seen) or float(e)-delta > max(fees_seen):
             raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
@@ -144,7 +165,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     return all_estimates
 
 
-class EstimateFeeTest(EACoinTestFramework):
+class EstimateFeeTest(BitcoinTestFramework):
 
     def setup_network(self):
         '''
@@ -208,7 +229,7 @@ class EstimateFeeTest(EACoinTestFramework):
         self.sync_all()
 
     def transact_and_mine(self, numblocks, mining_node):
-        min_fee = Decimal("0.00001")
+        min_fee = Decimal("0.0001")
         # We will now mine numblocks blocks generating on average 100 transactions between each block
         # We shuffle our confirmed txout set before each set of transactions
         # small_txpuzzle_randfee will use the transactions that have inputs already in the chain when possible
@@ -219,12 +240,12 @@ class EstimateFeeTest(EACoinTestFramework):
                 from_index = random.randint(1,2)
                 (txhex, fee) = small_txpuzzle_randfee(self.nodes[from_index], self.confutxo,
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
-                tx_kbytes = (len(txhex)/2)/1000.0
+                tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee)/tx_kbytes)
             sync_mempools(self.nodes[0:3],.1)
             mined = mining_node.getblock(mining_node.generate(1)[0],True)["tx"]
             sync_blocks(self.nodes[0:3],.1)
-            #update which txouts are confirmed
+            # update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:
                 if utx["txid"] in mined:

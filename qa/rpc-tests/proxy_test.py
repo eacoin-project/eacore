@@ -5,15 +5,15 @@
 import socket
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
-from test_framework.test_framework import EACoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.netutil import test_ipv6_local
 '''
 Test plan:
-- Start eacoind's with different proxy configurations
+- Start bitcoind's with different proxy configurations
 - Use addnode to initiate connections
 - Verify that proxies are connected to, and the right connection command is given
-- Proxy configurations to test on eacoind side:
+- Proxy configurations to test on bitcoind side:
     - `-proxy` (proxy everything)
     - `-onion` (proxy just onions)
     - `-proxyrandomize` Circuit randomization
@@ -23,8 +23,8 @@ Test plan:
     - proxy on IPv6
 
 - Create various proxies (as threads)
-- Create eacoinds that connect to them
-- Manipulate the eacoinds using addnode (onetry) an observe effects
+- Create bitcoinds that connect to them
+- Manipulate the bitcoinds using addnode (onetry) an observe effects
 
 addnode connect to IPv4
 addnode connect to IPv6
@@ -33,7 +33,7 @@ addnode connect to generic DNS name
 '''
 
 
-class ProxyTest(EACoinTestFramework):
+class ProxyTest(BitcoinTestFramework):
     def __init__(self):
         self.have_ipv6 = test_ipv6_local()
         # Create two proxies on different ports
@@ -84,9 +84,9 @@ class ProxyTest(EACoinTestFramework):
         node.addnode("15.61.23.23:1234", "onetry")
         cmd = proxies[0].queue.get()
         assert(isinstance(cmd, Socks5Command))
-        # Note: eacoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
+        # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-        assert_equal(cmd.addr, "15.61.23.23")
+        assert_equal(cmd.addr, b"15.61.23.23")
         assert_equal(cmd.port, 1234)
         if not auth:
             assert_equal(cmd.username, None)
@@ -98,9 +98,9 @@ class ProxyTest(EACoinTestFramework):
             node.addnode("[1233:3432:2434:2343:3234:2345:6546:4534]:5443", "onetry")
             cmd = proxies[1].queue.get()
             assert(isinstance(cmd, Socks5Command))
-            # Note: eacoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
+            # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-            assert_equal(cmd.addr, "1233:3432:2434:2343:3234:2345:6546:4534")
+            assert_equal(cmd.addr, b"1233:3432:2434:2343:3234:2345:6546:4534")
             assert_equal(cmd.port, 5443)
             if not auth:
                 assert_equal(cmd.username, None)
@@ -109,11 +109,11 @@ class ProxyTest(EACoinTestFramework):
 
         if test_onion:
             # Test: outgoing onion connection through node
-            node.addnode("eacoinostk4e4re.onion:8333", "onetry")
+            node.addnode("bitcoinostk4e4re.onion:8333", "onetry")
             cmd = proxies[2].queue.get()
             assert(isinstance(cmd, Socks5Command))
             assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-            assert_equal(cmd.addr, "eacoinostk4e4re.onion")
+            assert_equal(cmd.addr, b"bitcoinostk4e4re.onion")
             assert_equal(cmd.port, 8333)
             if not auth:
                 assert_equal(cmd.username, None)
@@ -125,7 +125,7 @@ class ProxyTest(EACoinTestFramework):
         cmd = proxies[3].queue.get()
         assert(isinstance(cmd, Socks5Command))
         assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-        assert_equal(cmd.addr, "node.noumenon")
+        assert_equal(cmd.addr, b"node.noumenon")
         assert_equal(cmd.port, 8333)
         if not auth:
             assert_equal(cmd.username, None)
